@@ -10,20 +10,22 @@ Ziel ist die Entwicklung eines C#-Desktop-Tools (WPF), das die Struktur, elektro
 
 ## Technologie-Stack
 
-- **Sprache**: C# (.NET 8)
+- **Sprache**: C# (.NET 10)
 - **UI**: WPF (Windows Presentation Foundation)
 - **3D-Rendering**: Helix Toolkit (WPF)
-- **Mathematik / Numerik**: Math.NET Numerics
-- **Charting**: OxyPlot
+- **Mathematik / Numerik**: Math.NET Numerics (vorbereitet)
+- **Charting**: OxyPlot.Wpf v2
 - **LaTeX-Export**: String-Templating + automatische `.tex`-Generierung
 
-## Repository-Struktur (geplant)
+## Repository-Struktur
 
 ```
 ├── docs/                   # Dokumentation (Wiki-Clone, UML, Screenshots)
 │   ├── Wiki/
 │   │   ├── Home.md         # Projektidee und Zielstellung
 │   │   ├── Entwicklungszyklus.md
+│   │   ├── Fragestellung.md
+│   │   ├── Anforderungsanalyse.md
 │   │   └── KI-Nutzung.md
 │   └── UML/
 │       ├── Klassendiagramm.md
@@ -32,7 +34,7 @@ Ziel ist die Entwicklung eines C#-Desktop-Tools (WPF), das die Struktur, elektro
 │   ├── QuantumDotStudio.Core/          # Domänenmodelle, Physik-Engine, Parser
 │   ├── QuantumDotStudio.Renderer/      # 3D-Visualisierung (Helix Toolkit)
 │   ├── QuantumDotStudio.Solver/        # Quantenmechanische Berechnungen
-│   ├── QuantumDotStudio.Reports/       # LaTeX-Export, Plotting
+│   ├── QuantumDotStudio.Reports/       # LaTeX-Export
 │   ├── QuantumDotStudio.Tests/           # Unit-Tests (xUnit)
 │   └── QuantumDotStudio.WPF/           # Hauptanwendung (WPF)
 └── README.md
@@ -43,7 +45,7 @@ Ziel ist die Entwicklung eines C#-Desktop-Tools (WPF), das die Struktur, elektro
 ### Voraussetzungen
 
 - Windows 10/11
-- .NET 8 SDK
+- .NET 10 SDK
 - Visual Studio 2022 (oder JetBrains Rider)
 
 ### Build
@@ -53,6 +55,17 @@ cd src/QuantumDotStudio.WPF
 dotnet restore
 dotnet build
 ```
+
+### Test
+
+```bash
+cd "C:\Users\dimar\OneDrive\Desktop\Master Nano\NANO SS26\Softwareentwicklung\Quantum Dots\dimar"
+dotnet test QuantumDotStudio.slnx
+```
+
+## Projektstatus
+
+Aktueller Stand: **Phase 3, Sprint D — Integration & Polishing**.
 
 ## Git Workflow
 

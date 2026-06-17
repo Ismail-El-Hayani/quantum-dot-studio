@@ -11,45 +11,57 @@
 
 ## Phase 2: Spezifikation & Entwurf (bis 6. Juli 2026)
 
-- [ ] Detaillierte Fragestellung formulieren: Welche physikalischen Modelle (unendlicher vs. endlicher Potentialtopf? Welche Materialparameter?)
-- [ ] Anforderungsanalyse: Funktionale / nicht-funktionale Anforderungen
-- [ ] UML-Klassendiagramm: Domänenmodell (Material, QuantumDot, ElektronenZustand, LatticeEngine, Solver, Renderer)
-- [ ] UML-Sequenzdiagramm: Interaktion "Benutzer ändert Radius → System berechnet → Renderer aktualisiert"
-- [ ] Softwarearchitektur festlegen: MVVM-Pattern für WPF, Service-Driven Architecture für Core
-- [ ] **Bestätigung der Idee und des Entwurfs durch Betreuer einholen**
+- [x] Detaillierte Fragestellung formulieren: Welche physikalischen Modelle (unendlicher vs. endlicher Potentialtopf? Welche Materialparameter?)
+- [x] Anforderungsanalyse: Funktionale / nicht-funktionale Anforderungen
+- [x] UML-Klassendiagramm: Domänenmodell (Material, QuantumDot, ElektronenZustand, LatticeEngine, Solver, Renderer)
+- [x] UML-Sequenzdiagramm: Interaktion "Benutzer ändert Radius → System berechnet → Renderer aktualisiert"
+- [x] Softwarearchitektur festlegen: MVVM-Pattern für WPF, Service-Driven Architecture für Core
+- [ ] **Bestätigung der Idee und des Entwurfs durch Betreuer einholen** *(offen — Betreuer wurde eingeladen)*
 
 ## Phase 3: Implementierung (6. Juli – 30. Juli 2026)
 
-### Sprint A: Domänenmodell & Solver (Woche 1)
+### Sprint A: Domänenmodell & Solver (Woche 1) — abgeschlossen
 - [x] Projektstruktur in Visual Studio anlegen (.sln + 5 Projekte)
 - [x] Material-Datenbank (CdSe, InP, PbS: Bandlücke, effektive Massen, Dielektrizitätskonstante)
 - [x] Lattice-Generator (Zinkblende-Gitter, sphärische Ausschnittlogik)
 - [x] Quantenmechanischer Solver (Lösung Schrödinger-Gleichung in Kugelkoordinaten, Eigenwertberechnung)
 - [x] Unit-Tests für Solver-Modul
 
-### Sprint B: Renderer & UI (Woche 2)
+### Sprint B: Renderer & UI (Woche 2) — abgeschlossen
 - [x] Helix-Toolkit-Integration in WPF
-- [x] 3D-Gitterdarstellung (Atompositionen als Billboard-Spheres)
-- [x] Wahrscheinlichkeitsdichte-Cloud (Volumetrische Darstellung oder Heatmap auf Oberfläche)
+- [x] 3D-Gitterdarstellung (Atompositionen als farbige Kugeln)
+- [x] Wahrscheinlichkeitsdichte-Cloud (Punktwolke für 1S-Elektronenzustand)
 - [x] UI-Controls: Material-Auswahl, Radius-Slider, Energieanzeige
 - [x] Farbschema für Atomtypen implementieren
 
-### Sprint C: Diagramme & Export (Woche 3)
+### Sprint C: Diagramme & Export (Woche 3) — abgeschlossen
 - [x] OxyPlot-Integration für Energieniveau-Diagramm
 - [x] Emissionsspektrum-Plot (Größenabhängige Bandlücken -> Peak-Verschiebung)
 - [x] LaTeX-Templating-Engine (String-basiert)
 - [x] Berichtsexport: Parameter, Formeln, Ergebnistabelle (Screenshot-Platzhalter vorbereitet)
 
-### Sprint D: Integration & Polishing (Woche 4)
-- [ ] MVVM-ViewModels für alle Ansichten
-- [ ] Fehlerbehandlung und Validierung
-- [ ] Performance-Optimierung (Lazy Loading, Caching)
-- [ ] Dokumentation ergänzen: API-Beschreibung der Module, Tutorial für Endnutzer
-- [ ] KI-Nutzungsdokumentation finalisieren
+### Sprint D: Integration & Polishing (Woche 4) — in Arbeit
+
+- [ ] **MVVM & Validierung**
+  - [ ] `MainViewModel` in kleinere ViewModels aufsplitten (z. B. `SimulationViewModel`, `ExportViewModel`)
+  - [ ] Radius-Validierung (1 nm ≤ R ≤ 10 nm) mit Fehlermeldung
+  - [ ] Null-Prüfungen für Material/QuantumDot in Commands
+- [ ] **Performance**
+  - [ ] Caching der berechneten Energieniveaus pro (Material, Radius)
+  - [ ] Lazy Loading für Gitter bei großen Radien (optional)
+- [ ] **Dokumentation**
+  - [ ] README: Build-Anleitung und .NET-Version auf 10 aktualisieren
+  - [ ] Wiki-Seite: Tutorial für Endnutzer
+  - [ ] Wiki-Seite: API-Beschreibung der Module (Core, Solver, Renderer, Reports)
+- [ ] **LaTeX-Export finalisieren**
+  - [ ] Screenshot der 3D-Ansicht in Bericht einbetten (Optional)
+  - [ ] Bericht mit pdflatex testen
+- [ ] **KI-Nutzungsdokumentation finalisieren**
+  - [ ] Liste der KI-unterstützten Commits/Dateien ergänzen
 
 ## Phase 4: Abschluss (30. Juli 2026)
 
-- [ ] Finaler Build getestet
+- [ ] Finaler Build getestet (`dotnet build`, `dotnet test`)
 - [ ] Alle Wiki-Seiten vollständig
 - [ ] UML-Diagramme final
 - [ ] Letzter Commit auf main, Tag `v1.0.0`
@@ -59,7 +71,7 @@
 
 | KI-Tool | Einsatzzweck | Beitrag |
 |---------|-----------|---------|
-| GitHub Copilot / Claude Code | Code-Vorschläge, Boilerplate-Generierung für MVVM-Pattern | Beschleunigung repetitive Aufgaben |
+| GitHub Copilot / Claude Code | Code-Vorschläge, Boilerplate-Generierung für MVVM-Pattern, LaTeX-Template-Struktur | Beschleunigung repetitive Aufgaben |
 | ChatGPT / Claude | Physikalische Formeln prüfen, LaTeX-Syntax validieren | Qualitätssicherung Dokumentation |
 | Sonstige | (wird ergänzt) | |
 
