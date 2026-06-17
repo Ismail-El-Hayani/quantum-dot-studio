@@ -1,8 +1,4 @@
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Input;
-using System.Windows.Media.Media3D;
 using QuantumDotStudio.Renderer;
 using QuantumDotStudio.WPF.ViewModels;
 
@@ -44,12 +40,12 @@ public partial class MainWindow : Window
         if (viewModel is MainViewModel mainVm)
         {
             mainVm.Simulation.PropertyChanged += Simulation_PropertyChanged;
-            Update3DView(mainVm.Simulation.ActiveDot);
+            Update3DView(mainVm.Simulation);
         }
         else if (viewModel is SimulationViewModel simVm)
         {
             simVm.PropertyChanged += Simulation_PropertyChanged;
-            Update3DView(simVm.ActiveDot);
+            Update3DView(simVm);
         }
     }
 
@@ -58,19 +54,23 @@ public partial class MainWindow : Window
         if (sender is not SimulationViewModel vm)
             return;
 
-        if (e.PropertyName == nameof(SimulationViewModel.ActiveDot))
-            Update3DView(vm.ActiveDot);
+        if (e.PropertyName is nameof(SimulationViewModel.ActiveDot)
+                         or nameof(SimulationViewModel.ShowLattice)
+                         or nameof(SimulationViewModel.ShowCloud))
+        {
+            Update3DView(vm);
+        }
     }
 
-    private void Update3DView(QuantumDotStudio.Core.Models.QuantumDot? dot)
+    private void Update3DView(SimulationViewModel vm)
     {
-        if (dot == null)
+        if (vm.ActiveDot == null)
             return;
 
-        var model = _renderer.BuildModel(dot);
+        var model = _renderer.BuildModel(vm.ActiveDot, vm.ShowLattice, vm.ShowCloud);
         AtomModelHost.Content = model;
 
-        var bounds = _renderer.GetBounds(dot);
+        var bounds = _renderer.GetBounds(vm.ActiveDot);
         if (bounds.SizeX > 0 && bounds.SizeY > 0 && bounds.SizeZ > 0)
         {
             Viewport3D.ZoomExtents(bounds);

@@ -16,7 +16,7 @@ public class QuantumDotRenderer3D
     /// <summary>
     /// Atomskalierungsfaktor für die 3D-Darstellung.
     /// </summary>
-    public double AtomScale { get; set; } = 0.25;
+    public double AtomScale { get; set; } = 0.30;
 
     /// <summary>
     /// Punktgröße für Wahrscheinlichkeitswolken.
@@ -24,13 +24,18 @@ public class QuantumDotRenderer3D
     public double CloudPointSize { get; set; } = 0.08;
 
     /// <summary>
+    /// Zusätzlicher Rand um das Gitter für ZoomExtents (in nm).
+    /// </summary>
+    public double BoundsPadding_nm { get; set; } = 1.0;
+
+    /// <summary>
     /// Erzeugt eine Model3DGroup mit Atomen und optionaler Wahrscheinlichkeitswolke.
     /// </summary>
-    public Model3DGroup BuildModel(QuantumDot dot)
+    public Model3DGroup BuildModel(QuantumDot dot, bool showLattice = true, bool showCloud = true)
     {
         var group = new Model3DGroup();
 
-        if (dot?.Atoms != null)
+        if (showLattice && dot?.Atoms != null)
         {
             foreach (var atom in dot.Atoms)
             {
@@ -56,7 +61,7 @@ public class QuantumDotRenderer3D
             }
         }
 
-        if (dot?.ElectronCloud != null)
+        if (showCloud && dot?.ElectronCloud != null)
         {
             group.Children.Add(BuildProbabilityCloud(dot.ElectronCloud));
         }
@@ -66,18 +71,22 @@ public class QuantumDotRenderer3D
 
     /// <summary>
     /// Gibt eine BoundingBox für das gesamte Atomgitter zurück, um die Kamera zu zentrieren.
+    /// Berücksichtigt den Atomradius und einen optionalen Padding-Rand.
     /// </summary>
     public Rect3D GetBounds(QuantumDot dot)
     {
         if (dot?.Atoms == null || dot.Atoms.Count == 0)
             return new Rect3D(0, 0, 0, 1, 1, 1);
 
-        double minX = dot.Atoms.Min(a => a.Position.X);
-        double maxX = dot.Atoms.Max(a => a.Position.X);
-        double minY = dot.Atoms.Min(a => a.Position.Y);
-        double maxY = dot.Atoms.Max(a => a.Position.Y);
-        double minZ = dot.Atoms.Min(a => a.Position.Z);
-        double maxZ = dot.Atoms.Max(a => a.Position.Z);
+        double maxAtomRadius = dot.Atoms.Max(a => a.Radius_nm * AtomScale);
+        double pad = maxAtomRadius + BoundsPadding_nm;
+
+        double minX = dot.Atoms.Min(a => a.Position.X) - pad;
+        double maxX = dot.Atoms.Max(a => a.Position.X) + pad;
+        double minY = dot.Atoms.Min(a => a.Position.Y) - pad;
+        double maxY = dot.Atoms.Max(a => a.Position.Y) + pad;
+        double minZ = dot.Atoms.Min(a => a.Position.Z) - pad;
+        double maxZ = dot.Atoms.Max(a => a.Position.Z) + pad;
 
         return new Rect3D(minX, minY, minZ, maxX - minX, maxY - minY, maxZ - minZ);
     }
@@ -121,8 +130,8 @@ public class QuantumDotRenderer3D
         }
 
         var geometry = ConvertToWpf(meshBuilder.ToMesh());
-        var color = Color.FromArgb(120, 0, 150, 255); // halbtransparentes Blau
-        var material = MaterialHelper.CreateMaterial(color, 0.4);
+        var color = Color.FromArgb(140, 30, 144, 255); // halbtransparentes Dodger-Blau
+        var material = MaterialHelper.CreateMaterial(color, 0.45);
 
         return new GeometryModel3D(geometry, material)
         {

@@ -46,8 +46,8 @@
   - [x] `MainViewModel` in kleinere ViewModels aufsplitten (z. B. `SimulationViewModel`, `ExportViewModel`)
   - [x] Radius-Validierung (1 nm ≤ R ≤ 10 nm) mit Fehlermeldung
   - [x] Null-Prüfungen für Material/QuantumDot in Commands
-- [ ] **Performance**
-  - [ ] Caching der berechneten Energieniveaus pro (Material, Radius)
+- [x] **Performance**
+  - [x] Caching der berechneten Energieniveaus pro (Material, Radius)
   - [ ] Lazy Loading für Gitter bei großen Radien (optional)
 - [ ] **Dokumentation**
   - [ ] README: Build-Anleitung und .NET-Version auf 10 aktualisieren

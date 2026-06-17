@@ -7,14 +7,14 @@
         xmlns:oxy="http://oxyplot.org/wpf"
         xmlns:vm="clr-namespace:QuantumDotStudio.WPF.ViewModels"
         mc:Ignorable="d"
-        Title="Quantum Dot Studio" Height="700" Width="1100">
+        Title="Quantum Dot Studio" Height="720" Width="1200">
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
     
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="320" />
+            <ColumnDefinition Width="340" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -40,7 +40,28 @@
                 <TextBlock Text="{Binding Simulation.ValidationMessage}" TextWrapping="Wrap" Foreground="DarkRed" />
             </Border>
 
-            <Button Content="Berechnen" Command="{Binding Simulation.RecalculateCommand}" Margin="0,0,0,8" />
+            <Button Content="Berechnen" Command="{Binding Simulation.RecalculateCommand}" Margin="0,0,0,12" />
+
+            <Border Background="#1a1a2e" BorderBrush="#333355" BorderThickness="1" Padding="10" CornerRadius="4" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="3D-Ansicht" FontWeight="Bold" Foreground="#e0e0ff" Margin="0,0,0,8" />
+                    <CheckBox Content="Atomgitter anzeigen" IsChecked="{Binding Simulation.ShowLattice}" Foreground="#e0e0ff" Margin="0,0,0,6" />
+                    <CheckBox Content="Wahrscheinlichkeitswolke anzeigen" IsChecked="{Binding Simulation.ShowCloud}" Foreground="#e0e0ff" Margin="0,0,0,6" />
+
+                    <TextBlock Text="Legende" FontWeight="SemiBold" Foreground="#e0e0ff" Margin="0,8,0,4" />
+                    <ItemsControl ItemsSource="{Binding Simulation.LegendItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <Rectangle Width="12" Height="12" Fill="{Binding Brush}" Margin="0,0,6,0" />
+                                    <TextBlock Text="{Binding Label}" Foreground="#e0e0ff" FontSize="11" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <Button Content="LaTeX-Export" Command="{Binding Export.ExportCommand}" Margin="0,0,0,4" />
             <TextBlock Text="{Binding Export.StatusMessage}" TextWrapping="Wrap" FontSize="11" Foreground="DarkGreen" Margin="0,0,0,16" />
 

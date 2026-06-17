@@ -5,21 +5,32 @@ namespace QuantumDotStudio.Solver;
 
 /// <summary>
 /// Verbindet Materialauswahl, Solver und Gittergenerierung zu einem berechneten QuantumDot-Objekt.
+/// Zwischenergebnisse für identisches (Material, Radius) werden gecacht.
 /// </summary>
 public class QuantumDotService
 {
     private readonly LatticeEngine _lattice;
+    private readonly Dictionary<(string MaterialName, double Radius_nm), QuantumDot> _cache;
 
     public QuantumDotService()
     {
         _lattice = new LatticeEngine();
+        _cache = new Dictionary<(string MaterialName, double Radius_nm), QuantumDot>();
     }
 
     /// <summary>
     /// Erzeugt ein vollständig berechnetes Quantum Dot für das gewählte Material und den Radius.
+    /// Nutzt einen Cache, um wiederholte Berechnungen mit gleichen Parametern zu vermeiden.
     /// </summary>
     public QuantumDot BuildQuantumDot(Material material, double radius_nm, int maxLevels = 6)
     {
+        if (material == null)
+            throw new ArgumentNullException(nameof(material));
+
+        var key = (material.Name, radius_nm);
+        if (_cache.TryGetValue(key, out var cached))
+            return cached;
+
         var dot = new QuantumDot
         {
             Material = material,
@@ -61,6 +72,15 @@ public class QuantumDotService
         var cloudGen = new ProbabilityCloudGenerator();
         dot.ElectronCloud = cloudGen.GenerateElectronCloud1S(radius_nm).ToList();
 
+        _cache[key] = dot;
         return dot;
+    }
+
+    /// <summary>
+    /// Löscht den Cache, z. B. wenn sich Materialdaten zur Laufzeit ändern.
+    /// </summary>
+    public void ClearCache()
+    {
+        _cache.Clear();
     }
 }

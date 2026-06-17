@@ -1,5 +1,6 @@
 using QuantumDotStudio.Core.Data;
 using QuantumDotStudio.Core.Models;
+using QuantumDotStudio.Renderer;
 using QuantumDotStudio.Solver;
 using OxyPlot;
 using System.ComponentModel;
@@ -18,6 +19,8 @@ public class SimulationViewModel : INotifyPropertyChanged
     private double _radius_nm = 3.0;
     private QuantumDot _activeDot = new();
     private string? _validationMessage;
+    private bool _showLattice = true;
+    private bool _showCloud = true;
 
     public SimulationViewModel()
     {
@@ -108,10 +111,60 @@ public class SimulationViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(EnergyLevelPlot));
             OnPropertyChanged(nameof(SpectrumPlot));
             OnPropertyChanged(nameof(IsResultAvailable));
+            OnPropertyChanged(nameof(LegendItems));
         }
     }
 
     public bool IsResultAvailable => ActiveDot != null && !HasValidationError;
+
+    public bool ShowLattice
+    {
+        get => _showLattice;
+        set
+        {
+            if (_showLattice != value)
+            {
+                _showLattice = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowCloud
+    {
+        get => _showCloud;
+        set
+        {
+            if (_showCloud != value)
+            {
+                _showCloud = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Einträge für die Farblegende der 3D-Visualisierung.
+    /// </summary>
+    public List<LegendItem> LegendItems
+    {
+        get
+        {
+            if (ActiveDot?.Atoms == null)
+                return new List<LegendItem>();
+
+            return ActiveDot.Atoms
+                .Where(a => !string.IsNullOrEmpty(a.Element))
+                .Select(a => a.Element)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Select(el => new LegendItem
+                {
+                    Label = el,
+                    Brush = new System.Windows.Media.SolidColorBrush(AtomPalette.GetColorByElement(el))
+                })
+                .ToList();
+        }
+    }
 
     public string BandGapText => $"Bandlücke: {ActiveDot.TotalBandGap_eV:F3} eV";
     public string WavelengthText => $"Wellenlänge: {ActiveDot.EmissionWavelength_nm:F1} nm";
