@@ -13,10 +13,11 @@ public static class LatexReportGenerator
     /// Erzeugt den vollständigen LaTeX-Quelltext für den Bericht.
     /// </summary>
     /// <param name="dot">Das zu dokumentierende Quantum Dot.</param>
+    /// <param name="screenshotPath">Optionaler Pfad zu einem PNG-Screenshot der 3D-Ansicht, der eingebettet wird.</param>
     /// <param name="title">Titel des Berichts.</param>
     /// <param name="author">Autor des Berichts.</param>
     /// <returns>LaTeX-Quelltext als UTF-8 String.</returns>
-    public static string Generate(QuantumDot dot, string title = "Quantum Dot Studio — Technischer Bericht", string author = "Quantum Dot Studio")
+    public static string Generate(QuantumDot dot, string? screenshotPath = null, string title = "Quantum Dot Studio — Technischer Bericht", string author = "Quantum Dot Studio")
     {
         ArgumentNullException.ThrowIfNull(dot);
         ArgumentNullException.ThrowIfNull(dot.Material);
@@ -50,7 +51,15 @@ public static class LatexReportGenerator
         AppendQuantumDotTable(sb, dot);
         AppendEnergyLevels(sb, dot);
         AppendSpectrum(sb, dot);
-        AppendScreenshotPlaceholder(sb);
+
+        if (!string.IsNullOrWhiteSpace(screenshotPath) && File.Exists(screenshotPath))
+        {
+            AppendScreenshot(sb, screenshotPath);
+        }
+        else
+        {
+            AppendScreenshotPlaceholder(sb);
+        }
 
         sb.AppendLine(@"\end{document}");
 
@@ -187,6 +196,18 @@ public static class LatexReportGenerator
         sb.AppendLine(@"\centering");
         sb.AppendLine(@"\fbox{\parbox{0.8\textwidth}{\centering\vspace{3cm}Screenshot der 3D-Visualisierung (manuell einfügen)\vspace{3cm}}}");
         sb.AppendLine(@"\caption{Platzhalter für den Screenshot der 3D-Ansicht.}");
+        sb.AppendLine(@"\end{figure}");
+        sb.AppendLine();
+    }
+
+    private static void AppendScreenshot(StringBuilder sb, string screenshotPath)
+    {
+        var fileName = Path.GetFileName(screenshotPath);
+        sb.AppendLine(@"\section{Visualisierung}");
+        sb.AppendLine(@"\begin{figure}[h]");
+        sb.AppendLine(@"\centering");
+        sb.AppendLine($@"\includegraphics[width=0.8\textwidth]{{{fileName}}}");
+        sb.AppendLine(@"\caption{Screenshot der 3D-Ansicht mit Atomgitter und Wahrscheinlichkeitswolke.}");
         sb.AppendLine(@"\end{figure}");
         sb.AppendLine();
     }

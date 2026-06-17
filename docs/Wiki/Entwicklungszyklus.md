@@ -54,12 +54,12 @@
   - [x] Wiki-Seite: Tutorial für Endnutzer
   - [x] Wiki-Seite: API-Beschreibung der Module (Core, Solver, Renderer, Reports)
 - [x] **LaTeX-Export finalisieren**
-  - [ ] Screenshot der 3D-Ansicht in Bericht einbetten (Optional)
+  - [x] Screenshot der 3D-Ansicht in Bericht einbetten (Optional)
   - [x] Bericht mit pdflatex testen
 - [x] **KI-Nutzungsdokumentation finalisieren**
   - [x] Liste der KI-unterstützten Commits/Dateien ergänzen
 
-## Phase 4: Abschluss (30. Juli 2026)
+## Phase 4: Abschluss (30. Juli 2026) — aktiv
 
 - [ ] Finaler Build getestet (`dotnet build`, `dotnet test`)
 - [ ] Alle Wiki-Seiten vollständig

@@ -119,6 +119,52 @@ public class LatexReportGeneratorTests
         Assert.True(new FileInfo(pdfPath).Length > 0, "PDF ist leer.");
     }
 
+    [Fact]
+    public void Generate_With_ScreenshotPath_Embeds_Image()
+    {
+        var service = new QuantumDotService();
+        QuantumDot dot = service.BuildQuantumDot(CdSe, 3.0);
+
+        string tempPng = Path.Combine(Path.GetTempPath(), $"qds_test_{Guid.NewGuid():N}.png");
+        File.WriteAllBytes(tempPng, Array.Empty<byte>()); // leere Datei reicht für den Pfadtest
+
+        try
+        {
+            string latex = LatexReportGenerator.Generate(dot, tempPng);
+
+            Assert.Contains(@"\includegraphics[width=0.8\textwidth]", latex);
+            Assert.Contains(Path.GetFileName(tempPng), latex);
+            Assert.DoesNotContain("Platzhalter für den Screenshot", latex);
+        }
+        finally
+        {
+            File.Delete(tempPng);
+        }
+    }
+
+    [Fact]
+    public void Generate_With_Missing_ScreenshotPath_Uses_Placeholder()
+    {
+        var service = new QuantumDotService();
+        QuantumDot dot = service.BuildQuantumDot(CdSe, 3.0);
+
+        string latex = LatexReportGenerator.Generate(dot, "C:\\This\\Does\\Not\\Exist.png");
+
+        Assert.Contains("Platzhalter für den Screenshot", latex);
+        Assert.DoesNotContain(@"\includegraphics[width=0.8\textwidth]", latex);
+    }
+
+    [Fact]
+    public void Generate_Without_ScreenshotPath_Uses_Placeholder()
+    {
+        var service = new QuantumDotService();
+        QuantumDot dot = service.BuildQuantumDot(CdSe, 3.0);
+
+        string latex = LatexReportGenerator.Generate(dot);
+
+        Assert.Contains("Platzhalter für den Screenshot", latex);
+    }
+
     private static string? FindPdflatex()
     {
         foreach (var path in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))

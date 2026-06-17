@@ -15,6 +15,8 @@ public class ExportViewModel : INotifyPropertyChanged
     private QuantumDot? _activeDot;
     private string? _lastExportPath;
     private string? _statusMessage;
+    private bool _includeScreenshot;
+    private Func<string, string>? _screenshotProvider;
 
     public ExportViewModel()
     {
@@ -42,6 +44,34 @@ public class ExportViewModel : INotifyPropertyChanged
     }
 
     public bool IsExportEnabled => ActiveDot != null;
+
+    /// <summary>
+    /// Wenn true, wird ein Screenshot der 3D-Ansicht im LaTeX-Bericht eingebettet.
+    /// </summary>
+    public bool IncludeScreenshot
+    {
+        get => _includeScreenshot;
+        set
+        {
+            _includeScreenshot = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Funktion, die beim Export einen Screenshot erzeugt und unter dem angegebenen Pfad speichert.
+    /// Eingabe: gewünschter Zielpfad. Rückgabe: tatsächlicher Pfad zur PNG-Datei.
+    /// Wird von der View (MainWindow) registriert.
+    /// </summary>
+    public Func<string, string>? ScreenshotProvider
+    {
+        get => _screenshotProvider;
+        set
+        {
+            _screenshotProvider = value;
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>
     /// Pfad der letzten Exportdatei, oder null.
@@ -91,17 +121,27 @@ public class ExportViewModel : INotifyPropertyChanged
             FileName = $"QuantumDot_{ActiveDot.Material.Name}_{ActiveDot.Radius_nm:F1}nm.tex"
         };
 
-        if (dialog.ShowDialog() == true)
-        {
-            string latex = LatexReportGenerator.Generate(ActiveDot);
-            File.WriteAllText(dialog.FileName, latex, System.Text.Encoding.UTF8);
-            LastExportPath = dialog.FileName;
-            StatusMessage = $"Bericht gespeichert unter: {dialog.FileName}";
-        }
-        else
+        if (dialog.ShowDialog() != true)
         {
             StatusMessage = null;
+            return;
         }
+
+        string? screenshotPath = null;
+        if (IncludeScreenshot && ScreenshotProvider != null)
+        {
+            var texDir = Path.GetDirectoryName(dialog.FileName);
+            var pngFileName = $"QuantumDot_{ActiveDot.Material.Name}_{ActiveDot.Radius_nm:F1}nm_3d.png";
+            var targetPath = texDir != null ? Path.Combine(texDir, pngFileName) : pngFileName;
+            screenshotPath = ScreenshotProvider(targetPath);
+        }
+
+        string latex = LatexReportGenerator.Generate(ActiveDot, screenshotPath);
+        File.WriteAllText(dialog.FileName, latex, System.Text.Encoding.UTF8);
+        LastExportPath = dialog.FileName;
+        StatusMessage = screenshotPath != null
+            ? $"Bericht mit Screenshot gespeichert unter: {dialog.FileName}"
+            : $"Bericht gespeichert unter: {dialog.FileName}";
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

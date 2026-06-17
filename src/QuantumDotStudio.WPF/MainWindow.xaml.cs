@@ -1,5 +1,6 @@
 using System.Windows;
 using QuantumDotStudio.Renderer;
+using QuantumDotStudio.WPF.Helpers;
 using QuantumDotStudio.WPF.ViewModels;
 
 namespace QuantumDotStudio.WPF;
@@ -40,6 +41,7 @@ public partial class MainWindow : Window
         if (viewModel is MainViewModel mainVm)
         {
             mainVm.Simulation.PropertyChanged += Simulation_PropertyChanged;
+            mainVm.Export.ScreenshotProvider = CaptureScreenshot;
             Update3DView(mainVm.Simulation);
         }
         else if (viewModel is SimulationViewModel simVm)
@@ -47,6 +49,12 @@ public partial class MainWindow : Window
             simVm.PropertyChanged += Simulation_PropertyChanged;
             Update3DView(simVm);
         }
+    }
+
+    private string CaptureScreenshot(string targetPath)
+    {
+        ScreenshotHelper.CaptureViewport(Viewport3D, targetPath, 1280, 720);
+        return targetPath;
     }
 
     private void Simulation_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

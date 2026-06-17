@@ -63,6 +63,7 @@
             </Border>
 
             <Button Content="LaTeX-Export" Command="{Binding Export.ExportCommand}" Margin="0,0,0,4" />
+            <CheckBox Content="Screenshot der 3D-Ansicht einbetten" IsChecked="{Binding Export.IncludeScreenshot}" Margin="0,0,0,4" />
             <TextBlock Text="{Binding Export.StatusMessage}" TextWrapping="Wrap" FontSize="11" Foreground="DarkGreen" Margin="0,0,0,16" />
 
             <Border Background="LightGray" Padding="8" CornerRadius="4">
