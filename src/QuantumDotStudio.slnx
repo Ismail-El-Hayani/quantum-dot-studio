@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="QuantumDotStudio.Core/QuantumDotStudio.Core.csproj" />
+  <Project Path="QuantumDotStudio.Renderer/QuantumDotStudio.Renderer.csproj" />
+  <Project Path="QuantumDotStudio.Reports/QuantumDotStudio.Reports.csproj" />
+  <Project Path="QuantumDotStudio.Solver/QuantumDotStudio.Solver.csproj" />
+  <Project Path="QuantumDotStudio.Tests/QuantumDotStudio.Tests.csproj" />
+  <Project Path="QuantumDotStudio.WPF/QuantumDotStudio.WPF.csproj" />
+</Solution>

@@ -42,10 +42,10 @@
 
 ### Sprint D: Integration & Polishing (Woche 4) — in Arbeit
 
-- [ ] **MVVM & Validierung**
-  - [ ] `MainViewModel` in kleinere ViewModels aufsplitten (z. B. `SimulationViewModel`, `ExportViewModel`)
-  - [ ] Radius-Validierung (1 nm ≤ R ≤ 10 nm) mit Fehlermeldung
-  - [ ] Null-Prüfungen für Material/QuantumDot in Commands
+- [x] **MVVM & Validierung**
+  - [x] `MainViewModel` in kleinere ViewModels aufsplitten (z. B. `SimulationViewModel`, `ExportViewModel`)
+  - [x] Radius-Validierung (1 nm ≤ R ≤ 10 nm) mit Fehlermeldung
+  - [x] Null-Prüfungen für Material/QuantumDot in Commands
 - [ ] **Performance**
   - [ ] Caching der berechneten Energieniveaus pro (Material, Radius)
   - [ ] Lazy Loading für Gitter bei großen Radien (optional)
