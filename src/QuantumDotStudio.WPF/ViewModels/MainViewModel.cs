@@ -1,8 +1,10 @@
 using QuantumDotStudio.Core.Data;
 using QuantumDotStudio.Core.Models;
+using QuantumDotStudio.Reports;
 using QuantumDotStudio.Solver;
 using OxyPlot;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
@@ -23,7 +25,7 @@ public class MainViewModel : INotifyPropertyChanged
         _service = new QuantumDotService();
         Materials = new List<Material>(MaterialDatabase.Defaults);
         RecalculateCommand = new RelayCommand(_ => Recalculate(), _ => true);
-        ExportCommand = new RelayCommand(_ => { /* TODO */ }, _ => ActiveDot != null);
+        ExportCommand = new RelayCommand(_ => ExportLatex(), _ => ActiveDot != null);
 
         Recalculate();
     }
@@ -98,6 +100,25 @@ public class MainViewModel : INotifyPropertyChanged
     private void Recalculate()
     {
         ActiveDot = _service.BuildQuantumDot(SelectedMaterial, Radius_nm);
+    }
+
+    private void ExportLatex()
+    {
+        if (ActiveDot == null)
+            return;
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "LaTeX-Dokument (*.tex)|*.tex",
+            DefaultExt = ".tex",
+            FileName = $"QuantumDot_{ActiveDot.Material.Name}_{ActiveDot.Radius_nm:F1}nm.tex"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            string latex = LatexReportGenerator.Generate(ActiveDot);
+            File.WriteAllText(dialog.FileName, latex, System.Text.Encoding.UTF8);
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

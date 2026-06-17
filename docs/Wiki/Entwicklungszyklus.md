@@ -21,24 +21,24 @@
 ## Phase 3: Implementierung (6. Juli – 30. Juli 2026)
 
 ### Sprint A: Domänenmodell & Solver (Woche 1)
-- [ ] Projektstruktur in Visual Studio anlegen (.sln + 5 Projekte)
-- [ ] Material-Datenbank (CdSe, InP, PbS: Bandlücke, effektive Massen, Dielektrizitätskonstante)
-- [ ] Lattice-Generator (Zinkblende-Gitter, sphärische Ausschnittlogik)
-- [ ] Quantenmechanischer Solver (Lösung Schrödinger-Gleichung in Kugelkoordinaten, Eigenwertberechnung)
-- [ ] Unit-Tests für Solver-Modul
+- [x] Projektstruktur in Visual Studio anlegen (.sln + 5 Projekte)
+- [x] Material-Datenbank (CdSe, InP, PbS: Bandlücke, effektive Massen, Dielektrizitätskonstante)
+- [x] Lattice-Generator (Zinkblende-Gitter, sphärische Ausschnittlogik)
+- [x] Quantenmechanischer Solver (Lösung Schrödinger-Gleichung in Kugelkoordinaten, Eigenwertberechnung)
+- [x] Unit-Tests für Solver-Modul
 
 ### Sprint B: Renderer & UI (Woche 2)
-- [ ] Helix-Toolkit-Integration in WPF
-- [ ] 3D-Gitterdarstellung (Atompositionen als Billboard-Spheres)
-- [ ] Wahrscheinlichkeitsdichte-Cloud (Volumetrische Darstellung oder Heatmap auf Oberfläche)
-- [ ] UI-Controls: Material-Auswahl, Radius-Slider, Energieanzeige
-- [ ] Farbschema für Atomtypen implementieren
+- [x] Helix-Toolkit-Integration in WPF
+- [x] 3D-Gitterdarstellung (Atompositionen als Billboard-Spheres)
+- [x] Wahrscheinlichkeitsdichte-Cloud (Volumetrische Darstellung oder Heatmap auf Oberfläche)
+- [x] UI-Controls: Material-Auswahl, Radius-Slider, Energieanzeige
+- [x] Farbschema für Atomtypen implementieren
 
 ### Sprint C: Diagramme & Export (Woche 3)
-- [ ] OxyPlot-Integration für Energieniveau-Diagramm
-- [ ] Emissionsspektrum-Plot (Größenabhängige Bandlücken -> Peak-Verschiebung)
-- [ ] LaTeX-Templating-Engine (String-basiert)
-- [ ] Berichtsexport: Parameter, Formeln, Screenshots, Ergebnistabelle
+- [x] OxyPlot-Integration für Energieniveau-Diagramm
+- [x] Emissionsspektrum-Plot (Größenabhängige Bandlücken -> Peak-Verschiebung)
+- [x] LaTeX-Templating-Engine (String-basiert)
+- [x] Berichtsexport: Parameter, Formeln, Ergebnistabelle (Screenshot-Platzhalter vorbereitet)
 
 ### Sprint D: Integration & Polishing (Woche 4)
 - [ ] MVVM-ViewModels für alle Ansichten
