@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\QuantumDotStudio.Core\QuantumDotStudio.Core.csproj" />
+    <ProjectReference Include="..\QuantumDotStudio.Solver\QuantumDotStudio.Solver.csproj" />
+    <ProjectReference Include="..\QuantumDotStudio.Renderer\QuantumDotStudio.Renderer.csproj" />
+    <ProjectReference Include="..\QuantumDotStudio.Reports\QuantumDotStudio.Reports.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HelixToolkit.Wpf" Version="3.1.2" />
+    <PackageReference Include="OxyPlot.Wpf" Version="2.2.0" />
+  </ItemGroup>
+
+</Project>

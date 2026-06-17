@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/QuantumDotStudio.Core/QuantumDotStudio.Core.csproj" />
+    <Project Path="src/QuantumDotStudio.Renderer/QuantumDotStudio.Renderer.csproj" />
+    <Project Path="src/QuantumDotStudio.Reports/QuantumDotStudio.Reports.csproj" />
+    <Project Path="src/QuantumDotStudio.Solver/QuantumDotStudio.Solver.csproj" />
+    <Project Path="src/QuantumDotStudio.Tests/QuantumDotStudio.Tests.csproj" />
+    <Project Path="src/QuantumDotStudio.WPF/QuantumDotStudio.WPF.csproj" />
+  </Folder>
+</Solution>
