@@ -49,15 +49,15 @@
 - [x] **Performance**
   - [x] Caching der berechneten Energieniveaus pro (Material, Radius)
   - [ ] Lazy Loading für Gitter bei großen Radien (optional)
-- [ ] **Dokumentation**
-  - [ ] README: Build-Anleitung und .NET-Version auf 10 aktualisieren
-  - [ ] Wiki-Seite: Tutorial für Endnutzer
-  - [ ] Wiki-Seite: API-Beschreibung der Module (Core, Solver, Renderer, Reports)
-- [ ] **LaTeX-Export finalisieren**
+- [x] **Dokumentation**
+  - [x] README: Build-Anleitung und .NET-Version auf 10 aktualisieren
+  - [x] Wiki-Seite: Tutorial für Endnutzer
+  - [x] Wiki-Seite: API-Beschreibung der Module (Core, Solver, Renderer, Reports)
+- [x] **LaTeX-Export finalisieren**
   - [ ] Screenshot der 3D-Ansicht in Bericht einbetten (Optional)
-  - [ ] Bericht mit pdflatex testen
-- [ ] **KI-Nutzungsdokumentation finalisieren**
-  - [ ] Liste der KI-unterstützten Commits/Dateien ergänzen
+  - [x] Bericht mit pdflatex testen
+- [x] **KI-Nutzungsdokumentation finalisieren**
+  - [x] Liste der KI-unterstützten Commits/Dateien ergänzen
 
 ## Phase 4: Abschluss (30. Juli 2026)
 

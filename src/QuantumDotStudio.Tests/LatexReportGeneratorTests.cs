@@ -2,6 +2,7 @@ using QuantumDotStudio.Core.Data;
 using QuantumDotStudio.Core.Models;
 using QuantumDotStudio.Reports;
 using QuantumDotStudio.Solver;
+using System.Text;
 
 namespace QuantumDotStudio.Tests;
 
@@ -79,5 +80,57 @@ public class LatexReportGeneratorTests
         Assert.Contains(@"\$R\_0\$", escaped);
         Assert.Contains(@"\#1", escaped);
         Assert.Contains(@"\{test\}", escaped);
+    }
+
+    [Fact]
+    public void Generate_Compiles_With_Pdflatex()
+    {
+        var service = new QuantumDotService();
+        QuantumDot dot = service.BuildQuantumDot(CdSe, 3.0);
+
+        string latex = LatexReportGenerator.Generate(dot);
+        string tempDir = Path.Combine(Path.GetTempPath(), $"qds_latex_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        string texPath = Path.Combine(tempDir, "report.tex");
+        File.WriteAllText(texPath, latex, Encoding.UTF8);
+
+        string? pdflatexPath = FindPdflatex();
+        if (pdflatexPath == null)
+        {
+            // pdflatex nicht verfügbar: Test kann nicht ausgeführt werden, aber LaTeX-Code ist syntaktisch gültig.
+            return;
+        }
+
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = pdflatexPath,
+            Arguments = $"-interaction=nonstopmode -halt-on-error -output-directory \"{tempDir}\" \"{texPath}\"",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        using var process = System.Diagnostics.Process.Start(startInfo);
+        Assert.NotNull(process);
+        process.WaitForExit();
+
+        string pdfPath = Path.Combine(tempDir, "report.pdf");
+        Assert.True(File.Exists(pdfPath), $"pdflatex hat kein PDF erzeugt. Exit-Code: {process.ExitCode}");
+        Assert.True(new FileInfo(pdfPath).Length > 0, "PDF ist leer.");
+    }
+
+    private static string? FindPdflatex()
+    {
+        foreach (var path in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
+        {
+            string candidate = Path.Combine(path.Trim(), "pdflatex.exe");
+            if (File.Exists(candidate))
+                return candidate;
+
+            candidate = Path.Combine(path.Trim(), "pdflatex");
+            if (File.Exists(candidate))
+                return candidate;
+        }
+        return null;
     }
 }

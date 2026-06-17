@@ -12,56 +12,82 @@ Ziel ist die Entwicklung eines C#-Desktop-Tools (WPF), das die Struktur, elektro
 
 - **Sprache**: C# (.NET 10)
 - **UI**: WPF (Windows Presentation Foundation)
-- **3D-Rendering**: Helix Toolkit (WPF)
-- **Mathematik / Numerik**: Math.NET Numerics (vorbereitet)
+- **3D-Rendering**: HelixToolkit.Wpf v3
 - **Charting**: OxyPlot.Wpf v2
 - **LaTeX-Export**: String-Templating + automatische `.tex`-Generierung
+- **Tests**: xUnit
 
 ## Repository-Struktur
 
 ```
-├── docs/                   # Dokumentation (Wiki-Clone, UML, Screenshots)
+├── docs/                   # Dokumentation (Wiki-Quellen, UML)
 │   ├── Wiki/
-│   │   ├── Home.md         # Projektidee und Zielstellung
+│   │   ├── Home.md              # Projektidee und Zielstellung
 │   │   ├── Entwicklungszyklus.md
 │   │   ├── Fragestellung.md
 │   │   ├── Anforderungsanalyse.md
+│   │   ├── Klassendiagramm.md
+│   │   ├── Sequenzdiagramm.md
 │   │   └── KI-Nutzung.md
 │   └── UML/
 │       ├── Klassendiagramm.md
 │       └── Sequenzdiagramm.md
 ├── src/
-│   ├── QuantumDotStudio.Core/          # Domänenmodelle, Physik-Engine, Parser
+│   ├── QuantumDotStudio.Core/          # Domänenmodelle, Materialdatenbank
 │   ├── QuantumDotStudio.Renderer/      # 3D-Visualisierung (Helix Toolkit)
 │   ├── QuantumDotStudio.Solver/        # Quantenmechanische Berechnungen
-│   ├── QuantumDotStudio.Reports/       # LaTeX-Export
-│   ├── QuantumDotStudio.Tests/           # Unit-Tests (xUnit)
-│   └── QuantumDotStudio.WPF/           # Hauptanwendung (WPF)
+│   ├── QuantumDotStudio.Reports/       # LaTeX-Reportgenerator
+│   ├── QuantumDotStudio.Tests/          # Unit-Tests (xUnit)
+│   ├── QuantumDotStudio.WPF/            # Hauptanwendung (WPF)
+│   └── QuantumDotStudio.slnx            # Solution-Datei
 └── README.md
 ```
 
-## Getting Started
-
-### Voraussetzungen
+## Voraussetzungen
 
 - Windows 10/11
-- .NET 10 SDK
-- Visual Studio 2022 (oder JetBrains Rider)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Visual Studio 2022, JetBrains Rider oder `dotnet` CLI
 
-### Build
+## Build
 
-```bash
-cd src/QuantumDotStudio.WPF
-dotnet restore
-dotnet build
+In PowerShell oder der Windows-Eingabeaufforderung:
+
+```powershell
+cd "C:\Users\dimar\OneDrive\Desktop\Master Nano\NANO SS26\Softwareentwicklung\Quantum Dots\dimar\src"
+dotnet build QuantumDotStudio.slnx
 ```
 
-### Test
+Oder direkt in der Solution-Datei aus Visual Studio heraus öffnen:
 
-```bash
-cd "C:\Users\dimar\OneDrive\Desktop\Master Nano\NANO SS26\Softwareentwicklung\Quantum Dots\dimar"
+```
+Quantum Dot Studio\src\QuantumDotStudio.slnx
+```
+
+## Test
+
+```powershell
+cd "C:\Users\dimar\OneDrive\Desktop\Master Nano\NANO SS26\Softwareentwicklung\Quantum Dots\dimar\src"
 dotnet test QuantumDotStudio.slnx
 ```
+
+## Ausführen
+
+Nach erfolgreichem Build findet sich die Startanwendung unter:
+
+```
+src\QuantumDotStudio.WPF\bin\Debug\net10.0-windows\QuantumDotStudio.WPF.exe
+```
+
+## Hauptfunktionen
+
+- **Materialauswahl**: CdSe, InP, PbS (erweiterbare Materialdatenbank)
+- **Radius-Steuerung**: 1 nm bis 10 nm mit Live-Validierung
+- **3D-Gitter**: Zinkblende-Struktur mit farbkodierten Atomen
+- **Wahrscheinlichkeitswolke**: 1S-Elektronen-Grundzustand (ein-/ausschaltbar)
+- **Energieniveau-Diagramm**: Elektron- und Loch-Niveaus im Quantum Dot
+- **Emissionsspektrum**: Größenabhängige Peak-Verschiebung
+- **LaTeX-Export**: Automatischer Bericht mit Parametern, Formeln und Ergebnissen
 
 ## Projektstatus
 
