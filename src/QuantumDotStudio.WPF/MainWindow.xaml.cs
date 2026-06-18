@@ -1,4 +1,5 @@
 using System.Windows;
+using QuantumDotStudio.Core.Models;
 using QuantumDotStudio.Renderer;
 using QuantumDotStudio.WPF.Helpers;
 using QuantumDotStudio.WPF.ViewModels;
@@ -16,38 +17,21 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+        Loaded += OnLoaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        // Kamera erst nach dem ersten Render setzen, damit das Viewport seine Größe kennt.
+        // Danach bleibt die Kamera stehen, damit Radius-Änderungen das QD sichtbar wachsen/schrumpfen lassen.
+        Dispatcher.BeginInvoke(FitToMaxRadius, System.Windows.Threading.DispatcherPriority.Render);
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        Unsubscribe(e.OldValue);
-        Subscribe(e.NewValue);
-    }
-
-    private void Unsubscribe(object? viewModel)
-    {
-        if (viewModel is MainViewModel mainVm)
+        if (e.NewValue is MainViewModel mainVm)
         {
-            mainVm.Simulation.PropertyChanged -= Simulation_PropertyChanged;
-        }
-        else if (viewModel is SimulationViewModel simVm)
-        {
-            simVm.PropertyChanged -= Simulation_PropertyChanged;
-        }
-    }
-
-    private void Subscribe(object? viewModel)
-    {
-        if (viewModel is MainViewModel mainVm)
-        {
-            mainVm.Simulation.PropertyChanged += Simulation_PropertyChanged;
             mainVm.Export.ScreenshotProvider = CaptureScreenshot;
-            Update3DView(mainVm.Simulation);
-        }
-        else if (viewModel is SimulationViewModel simVm)
-        {
-            simVm.PropertyChanged += Simulation_PropertyChanged;
-            Update3DView(simVm);
         }
     }
 
@@ -57,28 +41,18 @@ public partial class MainWindow : Window
         return targetPath;
     }
 
-    private void Simulation_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void Reset3DView_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not SimulationViewModel vm)
-            return;
-
-        if (e.PropertyName is nameof(SimulationViewModel.ActiveDot)
-                         or nameof(SimulationViewModel.ShowLattice)
-                         or nameof(SimulationViewModel.ShowCloud))
-        {
-            Update3DView(vm);
-        }
+        FitToMaxRadius();
     }
 
-    private void Update3DView(SimulationViewModel vm)
+    private void FitToMaxRadius()
     {
-        if (vm.ActiveDot == null)
+        if (!Viewport3D.IsLoaded)
             return;
 
-        var model = _renderer.BuildModel(vm.ActiveDot, vm.ShowLattice, vm.ShowCloud);
-        AtomModelHost.Content = model;
-
-        var bounds = _renderer.GetBounds(vm.ActiveDot);
+        Viewport3D.UpdateLayout();
+        var bounds = _renderer.GetBounds(new QuantumDot { Radius_nm = 10.0 });
         if (bounds.SizeX > 0 && bounds.SizeY > 0 && bounds.SizeZ > 0)
         {
             Viewport3D.ZoomExtents(bounds);

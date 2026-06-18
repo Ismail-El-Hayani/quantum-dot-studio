@@ -6,6 +6,7 @@ using OxyPlot;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace QuantumDotStudio.WPF.ViewModels;
 
@@ -15,6 +16,7 @@ namespace QuantumDotStudio.WPF.ViewModels;
 public class SimulationViewModel : INotifyPropertyChanged
 {
     private readonly QuantumDotService _service;
+    private readonly DispatcherTimer _recalcTimer;
     private Material _selectedMaterial = MaterialDatabase.Defaults.First();
     private double _radius_nm = 3.0;
     private QuantumDot _activeDot = new();
@@ -25,8 +27,9 @@ public class SimulationViewModel : INotifyPropertyChanged
     public SimulationViewModel()
     {
         _service = new QuantumDotService();
+        _recalcTimer = CreateRecalcTimer();
         Materials = new List<Material>(MaterialDatabase.Defaults);
-        RecalculateCommand = new RelayCommand(_ => Recalculate(), _ => CanRecalculate());
+        RecalculateCommand = new RelayCommand(_ => { _recalcTimer?.Stop(); Recalculate(); }, _ => CanRecalculate());
 
         Recalculate();
     }
@@ -34,9 +37,23 @@ public class SimulationViewModel : INotifyPropertyChanged
     public SimulationViewModel(QuantumDotService service)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
+        _recalcTimer = CreateRecalcTimer();
         Materials = new List<Material>(MaterialDatabase.Defaults);
-        RecalculateCommand = new RelayCommand(_ => Recalculate(), _ => CanRecalculate());
+        RecalculateCommand = new RelayCommand(_ => { _recalcTimer?.Stop(); Recalculate(); }, _ => CanRecalculate());
 
+        Recalculate();
+    }
+
+    private DispatcherTimer CreateRecalcTimer()
+    {
+        var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(150), DispatcherPriority.Background, OnRecalcTimerTick, Dispatcher.CurrentDispatcher);
+        timer.Stop();
+        return timer;
+    }
+
+    private void OnRecalcTimerTick(object? sender, EventArgs e)
+    {
+        _recalcTimer?.Stop();
         Recalculate();
     }
 
@@ -56,7 +73,7 @@ public class SimulationViewModel : INotifyPropertyChanged
             if (_selectedMaterial != value)
             {
                 _selectedMaterial = value ?? throw new ArgumentNullException(nameof(value));
-                OnPropertyChanged();
+                OnPropertyChanged(nameof(SelectedMaterial));
                 Recalculate();
             }
         }
@@ -73,7 +90,7 @@ public class SimulationViewModel : INotifyPropertyChanged
             if (Math.Abs(_radius_nm - value) > 1e-6)
             {
                 _radius_nm = value;
-                OnPropertyChanged();
+                OnPropertyChanged(nameof(Radius_nm));
                 ValidateRadius();
             }
         }
@@ -104,7 +121,7 @@ public class SimulationViewModel : INotifyPropertyChanged
         private set
         {
             _activeDot = value;
-            OnPropertyChanged();
+            OnPropertyChanged(nameof(ActiveDot));
             OnPropertyChanged(nameof(BandGapText));
             OnPropertyChanged(nameof(WavelengthText));
             OnPropertyChanged(nameof(AtomCountText));
@@ -125,7 +142,7 @@ public class SimulationViewModel : INotifyPropertyChanged
             if (_showLattice != value)
             {
                 _showLattice = value;
-                OnPropertyChanged();
+                OnPropertyChanged(nameof(ShowLattice));
             }
         }
     }
@@ -138,7 +155,7 @@ public class SimulationViewModel : INotifyPropertyChanged
             if (_showCloud != value)
             {
                 _showCloud = value;
-                OnPropertyChanged();
+                OnPropertyChanged(nameof(ShowCloud));
             }
         }
     }
@@ -193,7 +210,8 @@ public class SimulationViewModel : INotifyPropertyChanged
         else
         {
             ValidationMessage = null;
-            Recalculate();
+            _recalcTimer?.Stop();
+            _recalcTimer?.Start();
         }
 
         if (RecalculateCommand is RelayCommand cmd)

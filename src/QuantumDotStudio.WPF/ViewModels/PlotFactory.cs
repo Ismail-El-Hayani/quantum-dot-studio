@@ -23,8 +23,8 @@ public static class PlotFactory
             Background = OxyColors.White
         };
 
-        var categoryAxis = new CategoryAxis { Position = AxisPosition.Bottom, Title = "Zustand" };
-        var valueAxis = new LinearAxis { Position = AxisPosition.Left, Title = "Energie (eV)", Minimum = 0 };
+        var categoryAxis = new CategoryAxis { Position = AxisPosition.Left, Title = "Zustand" };
+        var valueAxis = new LinearAxis { Position = AxisPosition.Bottom, Title = "Energie (eV)", Minimum = 0 };
         model.Axes.Add(categoryAxis);
         model.Axes.Add(valueAxis);
 

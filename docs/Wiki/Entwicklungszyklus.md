@@ -61,11 +61,19 @@
 
 ## Phase 4: Abschluss (30. Juli 2026) — aktiv
 
-- [ ] Finaler Build getestet (`dotnet build`, `dotnet test`)
+- [x] Finaler Build getestet (`dotnet build`, `dotnet test`)
 - [ ] Alle Wiki-Seiten vollständig
-- [ ] UML-Diagramme final
+- [x] UML-Diagramme final
 - [ ] Letzter Commit auf main, Tag `v1.0.0`
 - [ ] Repository-Archivierung durch Betreuer
+
+### Aktueller Stand 3D-Ansicht
+
+- [x] Radius-Slider aktualisiert das 3D-Modell live (`UpdateSourceTrigger=PropertyChanged`).
+- [x] Kamera wird einmalig so gesetzt, dass Radius-Änderungen das QD sichtbar wachsen/schrumpfen lassen.
+- [x] Materialwechsel wechselt die Atomelemente und damit die Farben.
+- [x] "3D-Ansicht zurücksetzen"-Button setzt die Kamera auf die Ausgangsansicht zurück.
+- [x] Checkboxes "Atomgitter" / "Wahrscheinlichkeitswolke" blenden die jeweiligen Geometrien aus.
 
 ## KI-Nutzung (laufend dokumentieren)
 

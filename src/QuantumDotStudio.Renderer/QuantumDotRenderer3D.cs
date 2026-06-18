@@ -10,44 +10,73 @@ namespace QuantumDotStudio.Renderer;
 
 /// <summary>
 /// Erzeugt aus einem Quantum Dot eine Helix-Toolkit-Model3D-Gruppe.
+/// Skaliert das Modell so, dass es unabhängig vom physikalischen Radius
+/// immer den gleichen sichtbaren Bereich im Viewport füllt.
 /// </summary>
 public class QuantumDotRenderer3D
 {
     /// <summary>
-    /// Atomskalierungsfaktor für die 3D-Darstellung.
+    /// Skalierungsfaktor: wie viele 3D-Einheiten ein physikalischer Nanometer einnimmt.
+    /// Höherer Wert = größer dargestelltes Quantum Dot.
     /// </summary>
-    public double AtomScale { get; set; } = 0.30;
+    public double UnitsPerNanometer { get; set; } = 0.40;
 
     /// <summary>
-    /// Punktgröße für Wahrscheinlichkeitswolken.
+    /// Atomradius relativ zum Gitterabstand. Sorgt für überlappende Kugeln.
     /// </summary>
-    public double CloudPointSize { get; set; } = 0.08;
+    public double AtomScale { get; set; } = 0.55;
 
     /// <summary>
-    /// Zusätzlicher Rand um das Gitter für ZoomExtents (in nm).
+    /// Punktgröße für Wahrscheinlichkeitswolken relativ zum Gitterabstand.
     /// </summary>
-    public double BoundsPadding_nm { get; set; } = 1.0;
+    public double CloudPointSize { get; set; } = 0.25;
 
     /// <summary>
     /// Erzeugt eine Model3DGroup mit Atomen und optionaler Wahrscheinlichkeitswolke.
+    /// Das Modell wird so skaliert, dass der gewählte Radius konstant aussieht,
+    /// während die atomare Dichte mit dem Radius zunimmt.
+    /// Das Modell wird zusätzlich um seinen Schwerpunkt zentriert.
     /// </summary>
     public Model3DGroup BuildModel(QuantumDot dot, bool showLattice = true, bool showCloud = true)
     {
         var group = new Model3DGroup();
 
-        if (showLattice && dot?.Atoms != null)
+        if (dot == null || dot.Radius_nm <= 0)
+            return group;
+
+        // Schwerpunkt des Atomgitters berechnen, um das Modell zu zentrieren.
+        System.Numerics.Vector3 centroid = System.Numerics.Vector3.Zero;
+        if (dot.Atoms != null && dot.Atoms.Count > 0)
+        {
+            double cx = dot.Atoms.Average(a => a.Position.X);
+            double cy = dot.Atoms.Average(a => a.Position.Y);
+            double cz = dot.Atoms.Average(a => a.Position.Z);
+            centroid = new System.Numerics.Vector3((float)cx, (float)cy, (float)cz);
+        }
+        else if (dot.ElectronCloud != null && dot.ElectronCloud.Count > 0)
+        {
+            double cx = dot.ElectronCloud.Average(p => p.Position.X);
+            double cy = dot.ElectronCloud.Average(p => p.Position.Y);
+            double cz = dot.ElectronCloud.Average(p => p.Position.Z);
+            centroid = new System.Numerics.Vector3((float)cx, (float)cy, (float)cz);
+        }
+
+        // Skalierungsfaktor: konstante Einheiten pro Nanometer, damit größere Radien auch visuell größer werden.
+        double visualScale = UnitsPerNanometer;
+
+        if (showLattice && dot.Atoms != null && dot.Atoms.Count > 0)
         {
             foreach (var atom in dot.Atoms)
             {
                 var center = new System.Numerics.Vector3(
-                    (float)atom.Position.X,
-                    (float)atom.Position.Y,
-                    (float)atom.Position.Z);
-                var radius = (float)(atom.Radius_nm * AtomScale);
+                    (float)((atom.Position.X - centroid.X) * visualScale),
+                    (float)((atom.Position.Y - centroid.Y) * visualScale),
+                    (float)((atom.Position.Z - centroid.Z) * visualScale));
+                var radius = (float)(atom.Radius_nm * AtomScale * visualScale);
                 var color = AtomPalette.GetColor(atom);
 
                 var meshBuilder = new MeshBuilder();
-                meshBuilder.AddSphere(center, radius, 12, 10);
+                meshBuilder.AddSphere(center, radius, 14, 12);
 
                 var geometry = ConvertToWpf(meshBuilder.ToMesh());
                 var material = MaterialHelper.CreateMaterial(color);
@@ -61,34 +90,25 @@ public class QuantumDotRenderer3D
             }
         }
 
-        if (showCloud && dot?.ElectronCloud != null)
+        if (showCloud && dot.ElectronCloud != null && dot.ElectronCloud.Count > 0)
         {
-            group.Children.Add(BuildProbabilityCloud(dot.ElectronCloud));
+            group.Children.Add(BuildProbabilityCloud(dot.ElectronCloud, centroid, visualScale));
         }
 
         return group;
     }
 
     /// <summary>
-    /// Gibt eine BoundingBox für das gesamte Atomgitter zurück, um die Kamera zu zentrieren.
-    /// Berücksichtigt den Atomradius und einen optionalen Padding-Rand.
+    /// Gibt eine BoundingBox für das gesamte Modell zurück.
+    /// Die Größe hängt vom aktuellen Radius ab, damit ZoomExtents passend arbeitet.
     /// </summary>
     public Rect3D GetBounds(QuantumDot dot)
     {
-        if (dot?.Atoms == null || dot.Atoms.Count == 0)
-            return new Rect3D(0, 0, 0, 1, 1, 1);
+        if (dot == null || dot.Radius_nm <= 0)
+            return new Rect3D(-2, -2, -2, 4, 4, 4);
 
-        double maxAtomRadius = dot.Atoms.Max(a => a.Radius_nm * AtomScale);
-        double pad = maxAtomRadius + BoundsPadding_nm;
-
-        double minX = dot.Atoms.Min(a => a.Position.X) - pad;
-        double maxX = dot.Atoms.Max(a => a.Position.X) + pad;
-        double minY = dot.Atoms.Min(a => a.Position.Y) - pad;
-        double maxY = dot.Atoms.Max(a => a.Position.Y) + pad;
-        double minZ = dot.Atoms.Min(a => a.Position.Z) - pad;
-        double maxZ = dot.Atoms.Max(a => a.Position.Z) + pad;
-
-        return new Rect3D(minX, minY, minZ, maxX - minX, maxY - minY, maxZ - minZ);
+        double half = dot.Radius_nm * UnitsPerNanometer * 1.3;
+        return new Rect3D(-half, -half, -half, half * 2, half * 2, half * 2);
     }
 
     private static System.Windows.Media.Media3D.MeshGeometry3D ConvertToWpf(HelixToolkit.Geometry.MeshGeometry3D source)
@@ -111,7 +131,7 @@ public class QuantumDotRenderer3D
         return wpf;
     }
 
-    private GeometryModel3D BuildProbabilityCloud(List<(System.Numerics.Vector3 Position, float Probability)> cloud)
+    private GeometryModel3D BuildProbabilityCloud(List<(System.Numerics.Vector3 Position, float Probability)> cloud, System.Numerics.Vector3 centroid, double visualScale)
     {
         if (cloud.Count == 0)
         {
@@ -120,17 +140,20 @@ public class QuantumDotRenderer3D
         }
 
         var meshBuilder = new MeshBuilder();
-        var baseRadius = (float)CloudPointSize;
+        var baseRadius = (float)(CloudPointSize * visualScale);
 
         foreach (var point in cloud)
         {
-            // Punktgröße proportional zur Wahrscheinlichkeit
+            var pos = new System.Numerics.Vector3(
+                (float)((point.Position.X - centroid.X) * visualScale),
+                (float)((point.Position.Y - centroid.Y) * visualScale),
+                (float)((point.Position.Z - centroid.Z) * visualScale));
             var r = baseRadius * (0.5f + 0.5f * point.Probability);
-            meshBuilder.AddSphere(point.Position, r, 6, 5);
+            meshBuilder.AddSphere(pos, r, 8, 6);
         }
 
         var geometry = ConvertToWpf(meshBuilder.ToMesh());
-        var color = Color.FromArgb(140, 30, 144, 255); // halbtransparentes Dodger-Blau
+        var color = Color.FromArgb(120, 30, 144, 255); // halbtransparentes Dodger-Blau
         var material = MaterialHelper.CreateMaterial(color, 0.45);
 
         return new GeometryModel3D(geometry, material)

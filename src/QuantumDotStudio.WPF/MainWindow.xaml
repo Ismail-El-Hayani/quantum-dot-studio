@@ -6,8 +6,12 @@
         xmlns:helix="http://helix-toolkit.org/wpf"
         xmlns:oxy="http://oxyplot.org/wpf"
         xmlns:vm="clr-namespace:QuantumDotStudio.WPF.ViewModels"
+        xmlns:converters="clr-namespace:QuantumDotStudio.WPF.Converters"
         mc:Ignorable="d"
         Title="Quantum Dot Studio" Height="720" Width="1200">
+    <Window.Resources>
+        <converters:QuantumDotToModel3DConverter x:Key="QuantumDotToModel3DConverter" />
+    </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
@@ -29,7 +33,7 @@
                      Margin="0,4,0,12" />
 
             <TextBlock Text="Radius (nm)" FontWeight="SemiBold" />
-            <Slider Minimum="1" Maximum="10" Value="{Binding Simulation.Radius_nm, Mode=TwoWay}"
+            <Slider Minimum="1" Maximum="10" Value="{Binding Simulation.Radius_nm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     TickFrequency="0.1" IsSnapToTickEnabled="True"
                     Margin="0,4,0,4" />
             <TextBlock Text="{Binding Simulation.Radius_nm, StringFormat='{}{0:F1} nm'}" Margin="0,0,0,4" />
@@ -47,6 +51,7 @@
                     <TextBlock Text="3D-Ansicht" FontWeight="Bold" Foreground="#e0e0ff" Margin="0,0,0,8" />
                     <CheckBox Content="Atomgitter anzeigen" IsChecked="{Binding Simulation.ShowLattice}" Foreground="#e0e0ff" Margin="0,0,0,6" />
                     <CheckBox Content="Wahrscheinlichkeitswolke anzeigen" IsChecked="{Binding Simulation.ShowCloud}" Foreground="#e0e0ff" Margin="0,0,0,6" />
+                    <Button Content="3D-Ansicht zurücksetzen" Click="Reset3DView_Click" Margin="0,0,0,8" />
 
                     <TextBlock Text="Legende" FontWeight="SemiBold" Foreground="#e0e0ff" Margin="0,8,0,4" />
                     <ItemsControl ItemsSource="{Binding Simulation.LegendItems}">
@@ -84,9 +89,26 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0" BorderBrush="Gray" BorderThickness="1" Margin="0,0,0,8">
-                <helix:HelixViewport3D x:Name="Viewport3D" ShowFrameRate="True" InfiniteSpin="False">
+                <helix:HelixViewport3D x:Name="Viewport3D"
+                                     ShowFrameRate="True"
+                                     InfiniteSpin="False"
+                                     RotateGesture="LeftClick"
+                                     PanGesture="RightClick"
+                                     ShowCoordinateSystem="False"
+                                     ShowViewCube="False"
+                                     CameraMode="Inspect"
+                                     ClipToBounds="True"
+                                     Cursor="Cross">
                     <helix:DefaultLights />
-                    <ModelVisual3D x:Name="AtomModelHost" />
+                    <ModelVisual3D x:Name="AtomModelHost">
+                        <ModelVisual3D.Content>
+                            <MultiBinding Converter="{StaticResource QuantumDotToModel3DConverter}">
+                                <Binding Path="Simulation.ActiveDot" />
+                                <Binding Path="Simulation.ShowLattice" />
+                                <Binding Path="Simulation.ShowCloud" />
+                            </MultiBinding>
+                        </ModelVisual3D.Content>
+                    </ModelVisual3D>
                 </helix:HelixViewport3D>
             </Border>
 
