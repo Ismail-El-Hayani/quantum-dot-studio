@@ -22,7 +22,7 @@ jobs:
         run: dotnet build src/QuantumDotStudio.slnx --configuration Release
 
       - name: Test
-        run: dotnet test src/QuantumDotStudio.slnx --configuration Release --no-build --logger "trx" --results-path "TestResults"
+        run: dotnet test src/QuantumDotStudio.slnx --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
