@@ -50,23 +50,23 @@ Ziel ist die Entwicklung eines C#-Desktop-Tools (WPF), das die Struktur, elektro
 
 ## Build
 
-In PowerShell oder der Windows-Eingabeaufforderung:
+Im Projekt-Stammverzeichnis (oder in PowerShell):
 
 ```powershell
-cd "C:\Users\dimar\OneDrive\Desktop\Master Nano\NANO SS26\Softwareentwicklung\Quantum Dots\dimar\src"
+cd src
 dotnet build QuantumDotStudio.slnx
 ```
 
 Oder direkt in der Solution-Datei aus Visual Studio heraus öffnen:
 
 ```
-Quantum Dot Studio\src\QuantumDotStudio.slnx
+src\QuantumDotStudio.slnx
 ```
 
 ## Test
 
 ```powershell
-cd "C:\Users\dimar\OneDrive\Desktop\Master Nano\NANO SS26\Softwareentwicklung\Quantum Dots\dimar\src"
+cd src
 dotnet test QuantumDotStudio.slnx
 ```
 
@@ -80,17 +80,19 @@ src\QuantumDotStudio.WPF\bin\Debug\net10.0-windows\QuantumDotStudio.WPF.exe
 
 ## Hauptfunktionen
 
-- **Materialauswahl**: CdSe, InP, PbS (erweiterbare Materialdatenbank)
+- **Materialauswahl**: CdSe, InP, PbS, CdS, ZnSe, ZnS (erweiterbare JSON-Materialdatenbank)
+- **Core/Shell-Modus**: Heterostrukturen mit endlichem Potentialtopf, Band-Offsets und Strain-Analyse (kritische Schalendicke)
 - **Radius-Steuerung**: 1 nm bis 10 nm mit Live-Validierung
-- **3D-Gitter**: Zinkblende-Struktur mit farbkodierten Atomen
+- **3D-Gitter**: Zinkblende-Struktur mit farbkodierten Atomen (homogen oder Kern/Hülle)
 - **Wahrscheinlichkeitswolke**: 1S-Elektronen-Grundzustand (ein-/ausschaltbar)
 - **Energieniveau-Diagramm**: Elektron- und Loch-Niveaus im Quantum Dot
 - **Emissionsspektrum**: Größenabhängige Peak-Verschiebung
-- **LaTeX-Export**: Automatischer Bericht mit Parametern, Formeln und Ergebnissen
+- **Bandkantenprofil**: Radiales Leitungs-/Valenzbandprofil der Core/Shell-Struktur mit gebundenen Niveaus
+- **LaTeX-Export**: Automatischer Bericht mit Parametern, Formeln, Strain-Status und Ergebnissen
 
 ## Projektstatus
 
-Aktueller Stand: **Phase 3, Sprint D — Integration & Polishing**.
+Eigenständiges Projekt, aktiv entwickelt. Aktueller Stand: **Core/Shell-Physik und -UI fertig** (Phase 1 des Entwicklungsplans), laufend erweitert Richtung Sensor-Design-Plattform — siehe [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Git Workflow
 

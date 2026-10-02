@@ -6,7 +6,6 @@
 - [x] README.md mit Projektbeschreibung erstellen
 - [x] Wiki-Startseite (Idee & Zielstellung) schreiben
 - [x] Repository auf GitHub veröffentlicht
-- [x] Betreuer (Prof. Zug, Herr Göhler) als Collaborator einladen
 - [x] Entwicklungszyklus-Dokumentation im Wiki ergänzen
 
 ## Phase 2: Spezifikation & Entwurf (bis 6. Juli 2026)
@@ -16,7 +15,7 @@
 - [x] UML-Klassendiagramm: Domänenmodell (Material, QuantumDot, ElektronenZustand, LatticeEngine, Solver, Renderer)
 - [x] UML-Sequenzdiagramm: Interaktion "Benutzer ändert Radius → System berechnet → Renderer aktualisiert"
 - [x] Softwarearchitektur festlegen: MVVM-Pattern für WPF, Service-Driven Architecture für Core
-- [ ] **Bestätigung der Idee und des Entwurfs durch Betreuer einholen** *(offen — Betreuer wurde eingeladen)*
+- [ ] **Konzept-Review durch externe Fachleute einholen** *(offen)*
 
 ## Phase 3: Implementierung (6. Juli – 30. Juli 2026)
 
@@ -59,14 +58,15 @@
 - [x] **KI-Nutzungsdokumentation finalisieren**
   - [x] Liste der KI-unterstützten Commits/Dateien ergänzen
 
-## Phase 4: Abschluss (30. Juli 2026) — aktiv
+## Phase 4: Abschluss des initialen Entwicklungszyklus — abgeschlossen
 
 - [x] Finaler Build getestet (`dotnet build`, `dotnet test`)
 - [x] CI: GitHub Actions Workflow baut und testet bei jedem Push/PR (`.github/workflows/dotnet.yml`)
-- [ ] Alle Wiki-Seiten vollständig
 - [x] UML-Diagramme final
-- [ ] Letzter Commit auf main, Tag `v1.0.0`
-- [ ] Repository-Archivierung durch Betreuer
+- [x] Repository in eigenes Konto überführt (quantum-dot-studio)
+
+> Die weitere Entwicklung folgt dem Plan in [`docs/ROADMAP.md`](../ROADMAP.md)
+> (Core/Shell-Physik, Sensormodi, Wahrscheinlichkeits-Engine).
 
 ### Qualitätsverbesserungen (Review-Runde)
 

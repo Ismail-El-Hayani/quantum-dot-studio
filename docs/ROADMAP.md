@@ -11,7 +11,7 @@ docs (Anforderungsanalyse, Tutorial) stay German.
 
 ---
 
-## 0. Current state (v1.0 — course deliverable)
+## 0. Current state (v1.0 — initial release)
 
 | Capability | Status |
 |---|---|
@@ -268,4 +268,4 @@ Phases 1–2 are conventional engineering; Phase 3 is the scientific contributio
 2. Every new dataset is JSON (`Data/*.json`) — the AC-004 pattern, no code changes for content.
 3. No magic constants: each constant carries a comment with source (e.g. "Brus 1984", "Yu et al. 2003", "Matthews–Blakeslee 1974").
 4. CI must stay green; every phase adds tests, the report gains a chapter.
-5. Push to GitHub only with explicit approval (course repo rule).
+5. Documentation ships with the code: every feature lands with its wiki/README update.

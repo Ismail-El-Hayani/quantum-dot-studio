@@ -17,9 +17,9 @@ Quantum Dots sind zero-dimensional nanoskalige Halbleiterstrukturen, deren optis
 3. Echtzeit-Visualisierung: Darstellung der Atompositionen, der Elektronen- und Loch-Wahrscheinlichkeitsdichten sowie des Größenabhängigen Emissionsspektrums.
 4. Dokumentationsexport: Automatische Generierung eines LaTeX-Technischen Berichts mit verwendeten Formeln, Parametern und Ergebnissen.
 
-## Bezug zum Studium
+## Bezug zum Hintergrund
 
-Das Projekt verbindet direkt meinen Hintergrund in Nanotechnologie (TU Bergakademie Freiberg) mit softwaretechnischen Methoden aus der Vorlesung Softwareentwicklung. Besondere Relevanz hat die Umsetzung physikalischer Gleichungen (Brus-Gleichung, Schrödinger-Gleichung in Kugelkoordinaten) in sauber strukturierte Softwaremodule.
+Das Projekt verbindet meinen Hintergrund in Nanotechnologie mit softwaretechnischen Methoden. Besondere Relevanz hat die Umsetzung physikalischer Gleichungen (Brus-Gleichung, Schrödinger-Gleichung in Kugelkoordinaten) in sauber strukturierte Softwaremodule.
 
 ## Ausblick: Sensor-Design-Plattform
 
