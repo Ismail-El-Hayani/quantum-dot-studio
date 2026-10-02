@@ -12,12 +12,18 @@ namespace QuantumDotStudio.WPF.ViewModels;
 
 /// <summary>
 /// ViewModel für Simulationsparameter, Validierung und Ergebnisse.
+/// Unterstützt homogene Quantum Dots und Core/Shell-Heterostrukturen:
+/// bei aktivem Shell-Modus wird statt BuildQuantumDot die Kern/Hüllen-
+/// Berechnung mit endlichem Potentialtopf, Band-Offsets und Strain genutzt.
 /// </summary>
 public class SimulationViewModel : INotifyPropertyChanged
 {
     private readonly QuantumDotService _service;
     private readonly DispatcherTimer _recalcTimer;
     private Material _selectedMaterial;
+    private Material? _selectedShellMaterial;
+    private double _shellThickness_nm;
+    private bool _useShell;
     private double _radius_nm = 3.0;
     private QuantumDot _activeDot = new();
     private string? _validationMessage;
@@ -32,6 +38,7 @@ public class SimulationViewModel : INotifyPropertyChanged
         // Auswahl aus derselben Listeninstanz initialisieren, damit die
         // ComboBox-Referenz (SelectedItem) mit dem Feld uebereinstimmt.
         _selectedMaterial = Materials[0];
+        _selectedShellMaterial = Materials.Count > 1 ? Materials[1] : Materials[0];
         RecalculateCommand = new RelayCommand(_ => { _recalcTimer?.Stop(); Recalculate(); }, _ => CanRecalculate());
 
         Recalculate();
@@ -43,6 +50,7 @@ public class SimulationViewModel : INotifyPropertyChanged
         _recalcTimer = CreateRecalcTimer();
         Materials = new List<Material>(MaterialDatabase.Defaults);
         _selectedMaterial = Materials[0];
+        _selectedShellMaterial = Materials.Count > 1 ? Materials[1] : Materials[0];
         RecalculateCommand = new RelayCommand(_ => { _recalcTimer?.Stop(); Recalculate(); }, _ => CanRecalculate());
 
         Recalculate();
@@ -62,12 +70,12 @@ public class SimulationViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Verfügbare Halbleitermaterialien.
+    /// Verfügbare Halbleitermaterialien (Core und Shell).
     /// </summary>
     public List<Material> Materials { get; }
 
     /// <summary>
-    /// Aktuell gewähltes Material.
+    /// Aktuell gewähltes Core-Material.
     /// </summary>
     public Material SelectedMaterial
     {
@@ -84,7 +92,59 @@ public class SimulationViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Aktuell gewähltes Shell-Material (nur relevant bei aktivem Shell-Modus).
+    /// </summary>
+    public Material? SelectedShellMaterial
+    {
+        get => _selectedShellMaterial;
+        set
+        {
+            if (_selectedShellMaterial != value)
+            {
+                _selectedShellMaterial = value;
+                OnPropertyChanged(nameof(SelectedShellMaterial));
+                Recalculate();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Schalendicke in nm (0..5).
+    /// </summary>
+    public double ShellThickness_nm
+    {
+        get => _shellThickness_nm;
+        set
+        {
+            if (Math.Abs(_shellThickness_nm - value) > 1e-6)
+            {
+                _shellThickness_nm = value;
+                OnPropertyChanged(nameof(ShellThickness_nm));
+                RestartRecalcTimer();
+            }
+        }
+    }
+
+    /// <summary>
+    /// True, wenn eine Core/Shell-Heterostruktur simuliert werden soll.
+    /// </summary>
+    public bool UseShell
+    {
+        get => _useShell;
+        set
+        {
+            if (_useShell != value)
+            {
+                _useShell = value;
+                OnPropertyChanged(nameof(UseShell));
+                Recalculate();
+            }
+        }
+    }
+
+    /// <summary>
     /// Aktueller Radius in nm. Wird auf gültigen Bereich [1, 10] validiert.
+    /// Im Shell-Modus interpretiert als Core-Radius.
     /// </summary>
     public double Radius_nm
     {
@@ -129,8 +189,10 @@ public class SimulationViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(BandGapText));
             OnPropertyChanged(nameof(WavelengthText));
             OnPropertyChanged(nameof(AtomCountText));
+            OnPropertyChanged(nameof(ShellInfoText));
             OnPropertyChanged(nameof(EnergyLevelPlot));
             OnPropertyChanged(nameof(SpectrumPlot));
+            OnPropertyChanged(nameof(BandProfilePlot));
             OnPropertyChanged(nameof(IsResultAvailable));
             OnPropertyChanged(nameof(LegendItems));
         }
@@ -191,14 +253,40 @@ public class SimulationViewModel : INotifyPropertyChanged
     public string WavelengthText => $"Wellenlänge: {ActiveDot.EmissionWavelength_nm:F1} nm";
     public string AtomCountText => $"Atome: {ActiveDot.Atoms.Count}";
 
+    /// <summary>
+    /// Kurzinfo zur Shell (Material, Dicke, Strain-Status) oder leer.
+    /// </summary>
+    public string ShellInfoText
+    {
+        get
+        {
+            if (ActiveDot is not CoreShellQuantumDot cs)
+                return string.Empty;
+
+            string strain = cs.IsStrainRelaxed
+                ? "kritisch (überschreitet t_krit)"
+                : "kohärent (< t_krit)";
+            return $"Shell: {cs.ShellMaterial.Name} {cs.ShellThickness_nm:F1} nm | Missfit {cs.LatticeMismatch_f * 100:F1} % | {strain}";
+        }
+    }
+
     public PlotModel EnergyLevelPlot => PlotFactory.CreateEnergyLevelPlot(ActiveDot);
     public PlotModel SpectrumPlot => PlotFactory.CreateSpectrumPlot(ActiveDot);
+    public PlotModel BandProfilePlot => PlotFactory.CreateBandProfilePlot(ActiveDot);
 
     public ICommand RecalculateCommand { get; }
 
     private bool CanRecalculate()
     {
         return !HasValidationError && SelectedMaterial != null;
+    }
+
+    private void RestartRecalcTimer()
+    {
+        if (HasValidationError)
+            return;
+        _recalcTimer?.Stop();
+        _recalcTimer?.Start();
     }
 
     private void ValidateRadius()
@@ -229,7 +317,16 @@ public class SimulationViewModel : INotifyPropertyChanged
         if (HasValidationError || SelectedMaterial == null)
             return;
 
-        ActiveDot = _service.BuildQuantumDot(SelectedMaterial, _radius_nm);
+        if (_useShell && _selectedShellMaterial != null)
+        {
+            ActiveDot = _service.BuildCoreShellQuantumDot(
+                SelectedMaterial, _selectedShellMaterial,
+                _radius_nm, Math.Max(0.0, _shellThickness_nm));
+        }
+        else
+        {
+            ActiveDot = _service.BuildQuantumDot(SelectedMaterial, _radius_nm);
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

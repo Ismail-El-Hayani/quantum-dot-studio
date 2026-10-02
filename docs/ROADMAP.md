@@ -31,7 +31,7 @@ docs (Anforderungsanalyse, Tutorial) stay German.
 | 1.3 `StrainModel` (mismatch, critical thickness, relaxation flag) | ✅ done, tested |
 | Renderer for core/shell | ✅ free — lattice atoms carry per-element colors |
 | 1.2 Numeric Bessel zeros (replacing hardcoded table) | ⬜ open |
-| 1.4 UI: shell dropdown + thickness slider + band-edge profile plot | ⬜ open |
+| 1.4 UI: shell dropdown + thickness slider + band-edge profile plot | ✅ done — Shell-Modus-Toggle, Shell-Dropdown, Dicken-Slider, Bandprofil-Tab, Shell-Info in Ergebnissen + LaTeX-Kapitel |
 | 1.4 Tech debt: mesh-merge rendering, async recalc, 1P cloud | ⬜ open |
 
 Known tech debt (folded into Phase 1 below): one-mesh-per-atom rendering (perf),

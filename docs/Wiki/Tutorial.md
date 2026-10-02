@@ -33,7 +33,23 @@ Das Fenster ist in zwei Bereiche aufgeteilt:
 > Sie können dort weitere Halbleiter (z. B. ZnS oder CdTe) ergänzen, ohne den
 > Programmcode zu ändern — nach dem Neustart erscheinen sie im Dropdown.
 
-## 4. 3D-Ansicht anpassen
+## 4. Core/Shell-Modus
+
+Für realistischere Nanostruktur-Simulationen kann eine Schale aktiviert werden:
+
+1. Aktivieren Sie die Checkbox **Shell aktiv (Core/Shell-Heterostruktur)**.
+2. Wählen Sie ein **Shell-Material** (z. B. CdS oder ZnS für einen CdSe-Core).
+3. Stellen Sie die **Schalendicke** über den Slider ein (0–5 nm).
+
+Im Shell-Modus wird der Radius-Slider zum **Core-Radius**, und die Software berechnet zusätzlich:
+
+- Band-Offsets an der Grenzfläche (aus Elektronenaffinitäten)
+- Gebundene Zustände im **endlichen** Potentialtopf (statt des unendlichen)
+- Gitterfehlanpassung und kritische Schalendicke (Strain-Analyse)
+- Im Ergebnispanel erscheint der Strain-Status: **kohärent** (gut) oder **kritisch** (Versetzungen wahrscheinlich)
+- Der Tab **Bandprofil** zeigt das radiale Leitungs-/Valenzbandprofil mit den gebundenen Niveaus
+
+## 5. 3D-Ansicht anpassen
 
 Unterhalb des Radius-Sliders befindet sich der Bereich **3D-Ansicht**:
 
@@ -42,7 +58,7 @@ Unterhalb des Radius-Sliders befindet sich der Bereich **3D-Ansicht**:
 
 Die Farblegende zeigt, welche Farbe welchem Element (Kation/Anion) zugeordnet ist.
 
-## 5. Ergebnisse lesen
+## 6. Ergebnisse lesen
 
 Im Panel **Ergebnisse** werden angezeigt:
 
@@ -50,14 +66,15 @@ Im Panel **Ergebnisse** werden angezeigt:
 - **Emissionswellenlänge** in nm
 - **Anzahl der Atome** im sphärischen Zinkblende-Ausschnitt
 
-## 6. Diagramme
+## 7. Diagramme
 
-Unten rechts finden Sie zwei Plots:
+Unten finden Sie drei Tabs mit Plots:
 
-- **Energieniveau-Diagramm**: Zeigt die berechneten Elektronen- und Loch-Energieniveaus.
-- **Emissionsspektrum**: Zeigt einen Gauß-förmigen Peak, der die größenabhängige Bandlückenverschiebung visualisiert.
+- **Energie**: Balkendiagramm der berechneten Elektron- und Loch-Niveaus.
+- **Spektrum**: Gauß-förmiger Peak, der die größenabhängige Bandlückenverschiebung visualisiert.
+- **Bandprofil**: (im Shell-Modus) Radiales Leitungs-/Valenzbandprofil mit Band-Offsets und gebundenen Niveaus.
 
-## 7. Bericht exportieren
+## 8. Bericht exportieren
 
 1. Klicken Sie auf **LaTeX-Export**.
 2. Wählen Sie im Speichern-Dialog einen Zielordner und Dateinamen.
@@ -68,7 +85,7 @@ Unten rechts finden Sie zwei Plots:
 
 > Hinweis: Für die PDF-Erzeugung wird eine lokale LaTeX-Installation (z. B. TeX Live oder MiKTeX) mit `pdflatex` benötigt.
 
-## 8. Tipps
+## 9. Tipps
 
 - Größere Radien erzeugen mehr Atome und können die 3D-Ansicht verlangsamen.
 - Berechnete Quantum Dots werden zwischengespeichert: Material + Radius erneut wählen ist sofort sichtbar.

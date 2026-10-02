@@ -165,6 +165,48 @@ public class LatexReportGeneratorTests
         Assert.Contains("Platzhalter für den Screenshot", latex);
     }
 
+    [Fact]
+    public void Generate_CoreShell_Contains_Heterostructure_Section()
+    {
+        var service = new QuantumDotService();
+        var cdSe = MaterialDatabase.Defaults.Single(m => m.Name == "CdSe");
+        var cdS = MaterialDatabase.Defaults.Single(m => m.Name == "CdS");
+        var dot = service.BuildCoreShellQuantumDot(cdSe, cdS, 2.0, 0.6);
+
+        string latex = LatexReportGenerator.Generate(dot);
+
+        Assert.Contains(@"\section{Core/Shell-Heterostruktur}", latex);
+        Assert.Contains("Elektronenbarriere", latex);
+        Assert.Contains("Gitterfehlanpassung", latex);
+        Assert.Contains("kohärent", latex); // 0.6 nm < t_krit (~4.2 nm)
+    }
+
+    [Fact]
+    public void Generate_CoreShell_Relaxed_Shell_Warns()
+    {
+        var service = new QuantumDotService();
+        var cdSe = MaterialDatabase.Defaults.Single(m => m.Name == "CdSe");
+        var znS = MaterialDatabase.Defaults.Single(m => m.Name == "ZnS");
+        var dot = service.BuildCoreShellQuantumDot(cdSe, znS, 2.0, 5.0); // 5 nm >> t_krit ~1.4 nm
+
+        string latex = LatexReportGenerator.Generate(dot);
+
+        Assert.Contains(@"\section{Core/Shell-Heterostruktur}", latex);
+        Assert.Contains("relaxiert", latex);
+        Assert.Contains("Versetzungen", latex);
+    }
+
+    [Fact]
+    public void Generate_Homogeneous_Dot_Omits_CoreShell_Section()
+    {
+        var service = new QuantumDotService();
+        QuantumDot dot = service.BuildQuantumDot(CdSe, 3.0);
+
+        string latex = LatexReportGenerator.Generate(dot);
+
+        Assert.DoesNotContain(@"\section{Core/Shell-Heterostruktur}", latex);
+    }
+
     private static string? FindPdflatex()
     {
         foreach (var path in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))

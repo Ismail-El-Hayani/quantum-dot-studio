@@ -95,7 +95,7 @@ Hauptanwendung mit MVVM.
 | Klasse | Zweck |
 |--------|-------|
 | `MainViewModel` | Aggregiert `SimulationViewModel` und `ExportViewModel`. |
-| `SimulationViewModel` | Material, Radius, Validierung, Ergebnisse, Plots, 3D-Toggles. |
+| `SimulationViewModel` | Core- und Shell-Material, Radius, Schalendicke, Shell-Modus, Validierung, Ergebnisse, Plots (inkl. Bandprofil), 3D-Toggles. |
 | `ExportViewModel` | LaTeX-Export, Statusmeldung. |
 | `RelayCommand` | `ICommand`-Implementierung für Button-Bindings. |
 | `LegendItem` | Eintrag für die Farblegende. |

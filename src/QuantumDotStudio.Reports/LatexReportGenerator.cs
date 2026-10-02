@@ -52,6 +52,11 @@ public static class LatexReportGenerator
         AppendEnergyLevels(sb, dot);
         AppendSpectrum(sb, dot);
 
+        if (dot is CoreShellQuantumDot cs)
+        {
+            AppendCoreShellSection(sb, cs);
+        }
+
         if (!string.IsNullOrWhiteSpace(screenshotPath) && File.Exists(screenshotPath))
         {
             AppendScreenshot(sb, screenshotPath);
@@ -198,6 +203,36 @@ public static class LatexReportGenerator
         sb.AppendLine(@"\fbox{\parbox{0.8\textwidth}{\centering\vspace{3cm}Screenshot der 3D-Visualisierung (manuell einfügen)\vspace{3cm}}}");
         sb.AppendLine(@"\caption{Platzhalter für den Screenshot der 3D-Ansicht.}");
         sb.AppendLine(@"\end{figure}");
+        sb.AppendLine();
+    }
+
+    /// <summary>
+    /// Dokumentiert die Core/Shell-Heterostruktur: Geometrie, Band-Offsets,
+    /// Strain-Status und gebundene Zustände im endlichen Potentialtopf.
+    /// </summary>
+    private static void AppendCoreShellSection(StringBuilder sb, CoreShellQuantumDot cs)
+    {
+        sb.AppendLine(@"\section{Core/Shell-Heterostruktur}");
+        sb.AppendLine($@"Core-Material: {Escape(cs.Material.Name)} ({cs.CoreRadius_nm:F2}\,nm), Shell-Material: {Escape(cs.ShellMaterial.Name)} ({cs.ShellThickness_nm:F2}\,nm).");
+        sb.AppendLine(@"\begin{table}[h]");
+        sb.AppendLine(@"\centering");
+        sb.AppendLine(@"\begin{tabular}{lr}");
+        sb.AppendLine(@"\toprule");
+        sb.AppendLine(@"\textbf{Größe} & \textbf{Wert} \\ ");
+        sb.AppendLine(@"\midrule");
+        sb.AppendLine($@"Elektronenbarriere $V_{{0,e}}$ & {cs.ElectronBarrier_eV:F3}\,eV \\ ");
+        sb.AppendLine($@"Lochbarriere $V_{{0,h}}$ & {cs.HoleBarrier_eV:F3}\,eV \\ ");
+        sb.AppendLine($@"Gitterfehlanpassung $f$ & {cs.LatticeMismatch_f * 100:F2}\,\% \\ ");
+        sb.AppendLine(cs.IsStrainRelaxed
+            ? $@"Kritische Schalendicke $t_c$ & {cs.CriticalThickness_nm:F2}\,nm \\\\ \emph{{Status}} & \textbf{{relaxiert (Versetzungen wahrscheinlich)}} \\ "
+            : $@"Kritische Schalendicke $t_c$ & {cs.CriticalThickness_nm:F2}\,nm \\\\ \emph{{Status}} & kohärent (unter $t_c$) \\ ");
+        sb.AppendLine(@"\bottomrule");
+        sb.AppendLine(@"\end{tabular}");
+        sb.AppendLine(@"\caption{Band-Offsets und Strain-Charakteristik der Core/Shell-Struktur.}");
+        sb.AppendLine(@"\end{table}");
+        sb.AppendLine();
+        sb.AppendLine(@"Die gebundenen Zustände wurden im endlichen sphärischen Potentialtopf");
+        sb.AppendLine(@"(Anschlussbedingung $k \cot(kR) = -\kappa$, numerische Bisektion) berechnet.");
         sb.AppendLine();
     }
 
