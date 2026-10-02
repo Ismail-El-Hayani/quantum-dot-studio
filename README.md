@@ -21,6 +21,7 @@ Ziel ist die Entwicklung eines C#-Desktop-Tools (WPF), das die Struktur, elektro
 
 ```
 ├── docs/                   # Dokumentation (Wiki-Quellen, UML)
+│   ├── ROADMAP.md               # Sensor-Design-Plattform: Entwicklungsplan
 │   ├── Wiki/
 │   │   ├── Home.md              # Projektidee und Zielstellung
 │   │   ├── Entwicklungszyklus.md

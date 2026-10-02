@@ -20,3 +20,7 @@ Quantum Dots sind zero-dimensional nanoskalige Halbleiterstrukturen, deren optis
 ## Bezug zum Studium
 
 Das Projekt verbindet direkt meinen Hintergrund in Nanotechnologie (TU Bergakademie Freiberg) mit softwaretechnischen Methoden aus der Vorlesung Softwareentwicklung. Besondere Relevanz hat die Umsetzung physikalischer Gleichungen (Brus-Gleichung, Schrödinger-Gleichung in Kugelkoordinaten) in sauber strukturierte Softwaremodule.
+
+## Ausblick: Sensor-Design-Plattform
+
+Der mittelfristige Entwicklungsplan richtet sich auf die Erweiterung zum **Sensor-Design-Assistenten**: Core/Shell-Quantum Dots, Sensormodi (FRET, Quenching, Ladung) und schließlich die Abschätzung der **Erfolgswahrscheinlichkeit** eines geplanten Sensors (bio/chemisch) vor dem Syntheseaufwand. Der vollständige Plan liegt in [`docs/ROADMAP.md`](../ROADMAP.md).
