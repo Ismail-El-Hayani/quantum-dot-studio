@@ -7,10 +7,10 @@ namespace QuantumDotStudio.Solver;
 /// </summary>
 public static class QuantumSolver
 {
-    // Physikalische Konstanten
-    private const double HBar_Js = 1.054571817e-34;           // J·s
-    private const double ElectronMass_kg = 9.10938356e-31;      // kg
-    private const double EvToJ = 1.602176634e-19;              // J/eV
+    // Physikalische Konstanten (public: gemeinsame Nutzung durch FiniteWellSolver)
+    public const double HBar_Js = 1.054571817e-34;           // J·s
+    public const double ElectronMass_kg = 9.10938356e-31;      // kg
+    public const double EvToJ = 1.602176634e-19;              // J/eV
     private const double JouleMeter = 1.98644586e-25;           // h·c in J·m
     private const double CoulombConstant_eV_nm = 1.439964548;   // e²/(4πε₀) in eV·nm
 

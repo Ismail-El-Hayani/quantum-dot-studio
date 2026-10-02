@@ -6,6 +6,7 @@
     "EffectiveMassHole": 0.45,
     "DielectricConstant": 10.6,
     "LatticeConstant_A": 6.05,
+    "ElectronAffinity_eV": 4.9,
     "Cation": "Cd",
     "Anion": "Se"
   },
@@ -16,6 +17,7 @@
     "EffectiveMassHole": 0.6,
     "DielectricConstant": 12.5,
     "LatticeConstant_A": 5.86,
+    "ElectronAffinity_eV": 4.4,
     "Cation": "In",
     "Anion": "P"
   },
@@ -26,7 +28,41 @@
     "EffectiveMassHole": 0.105,
     "DielectricConstant": 17.0,
     "LatticeConstant_A": 5.94,
+    "ElectronAffinity_eV": 4.6,
     "Cation": "Pb",
+    "Anion": "S"
+  },
+  {
+    "Name": "CdS",
+    "BandGap_eV": 2.42,
+    "EffectiveMassElectron": 0.21,
+    "EffectiveMassHole": 0.7,
+    "DielectricConstant": 8.9,
+    "LatticeConstant_A": 5.832,
+    "ElectronAffinity_eV": 4.5,
+    "Cation": "Cd",
+    "Anion": "S"
+  },
+  {
+    "Name": "ZnSe",
+    "BandGap_eV": 2.7,
+    "EffectiveMassElectron": 0.16,
+    "EffectiveMassHole": 0.78,
+    "DielectricConstant": 8.7,
+    "LatticeConstant_A": 5.668,
+    "ElectronAffinity_eV": 4.3,
+    "Cation": "Zn",
+    "Anion": "Se"
+  },
+  {
+    "Name": "ZnS",
+    "BandGap_eV": 3.68,
+    "EffectiveMassElectron": 0.28,
+    "EffectiveMassHole": 0.75,
+    "DielectricConstant": 8.3,
+    "LatticeConstant_A": 5.409,
+    "ElectronAffinity_eV": 3.9,
+    "Cation": "Zn",
     "Anion": "S"
   }
 ]

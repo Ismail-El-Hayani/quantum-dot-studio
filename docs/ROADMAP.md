@@ -19,7 +19,20 @@ docs (Anforderungsanalyse, Tutorial) stay German.
 | Infinite spherical well + full Brus equation (incl. Coulomb term) | ✅ |
 | Zinc blende lattice cut-out, 3D rendering (Helix) | ✅ |
 | 1S electron cloud, energy levels, Gaussian emission peak | ✅ |
-| LaTeX report export, CI (build + 39 tests) | ✅ |
+| LaTeX report export, CI (build + tests) | ✅ |
+
+**Progress update (Phase 1, first chunk landed):**
+
+| Phase-1 item | Status |
+|---|---|
+| 1.1 `CoreShellQuantumDot` model + band offsets (`ElectronAffinity_eV`) | ✅ done, tested |
+| 1.1 Core/shell lattice (`GenerateZincBlendeCoreShell`) + shell materials in JSON | ✅ done, tested |
+| 1.2 `FiniteWellSolver` (k·cot(kR) = −κ, bisection) | ✅ done, tested (incl. 3D binding threshold) |
+| 1.3 `StrainModel` (mismatch, critical thickness, relaxation flag) | ✅ done, tested |
+| Renderer for core/shell | ✅ free — lattice atoms carry per-element colors |
+| 1.2 Numeric Bessel zeros (replacing hardcoded table) | ⬜ open |
+| 1.4 UI: shell dropdown + thickness slider + band-edge profile plot | ⬜ open |
+| 1.4 Tech debt: mesh-merge rendering, async recalc, 1P cloud | ⬜ open |
 
 Known tech debt (folded into Phase 1 below): one-mesh-per-atom rendering (perf),
 UI-thread recalculation, 1P excited state missing (FR-005), asymptotic Bessel

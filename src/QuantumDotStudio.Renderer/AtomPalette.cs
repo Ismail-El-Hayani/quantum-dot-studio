@@ -15,7 +15,8 @@ public static class AtomPalette
         ["In"] = Color.FromRgb(180, 130, 120),  // Indium: warmes Graubraun
         ["P"]  = Color.FromRgb(255, 200, 50),   // Phosphor: hellgelb
         ["Pb"] = Color.FromRgb(70, 75, 85),     // Blei: dunkles Stahlblau-Grau
-        ["S"]  = Color.FromRgb(220, 255, 0)     // Schwefel: giftiges Neongelb
+        ["S"]  = Color.FromRgb(220, 255, 0),    // Schwefel: giftiges Neongelb
+        ["Zn"] = Color.FromRgb(160, 165, 175)   // Zink: kühles Hellgrau
     };
 
     /// <summary>

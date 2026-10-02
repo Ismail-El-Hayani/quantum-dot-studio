@@ -31,6 +31,13 @@ public class Material
     public double DielectricConstant { get; set; }
 
     /// <summary>
+    /// Elektronenaffinität χ in eV (Abstand Vakuumniveau → Leitungsbandminimum).
+    /// Wird für die Bandanpassung von Core/Shell-Heterostrukturen benötigt.
+    /// Literaturwerte streuen ±0,1–0,2 eV — sie werden als unsicher betrachtet.
+    /// </summary>
+    public double ElectronAffinity_eV { get; set; }
+
+    /// <summary>
     /// Gitterkonstante in Ångström.
     /// </summary>
     public double LatticeConstant_A { get; set; }
