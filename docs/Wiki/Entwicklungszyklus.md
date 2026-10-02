@@ -62,10 +62,20 @@
 ## Phase 4: Abschluss (30. Juli 2026) — aktiv
 
 - [x] Finaler Build getestet (`dotnet build`, `dotnet test`)
+- [x] CI: GitHub Actions Workflow baut und testet bei jedem Push/PR (`.github/workflows/dotnet.yml`)
 - [ ] Alle Wiki-Seiten vollständig
 - [x] UML-Diagramme final
 - [ ] Letzter Commit auf main, Tag `v1.0.0`
 - [ ] Repository-Archivierung durch Betreuer
+
+### Qualitätsverbesserungen (Review-Runde)
+
+- [x] Volle Brus-Gleichung mit Coulomb-Term implementiert (`QuantumSolver.CoulombEnergy`), Literatur-Abgleich mit Yu et al. 2003
+- [x] `EnergyLevel.Particle`-Enum ersetzt String-Präfix-Parsing (`e-`/`h-`)
+- [x] Materialdatenbank JSON-basiert: `Data/materials.json` wird geladen statt Hardcode (NFR-003, AC-004)
+- [x] README-Build-Anleitung korrigiert (`.slnx` statt veralteter `.sln`-Pfade)
+- [x] Tote Platzhalter-Klassen entfernt (`Class1.cs` ×2, `UnitTest1.cs`), inkl. totem Code in `ConfinementEnergy`
+- [x] Anforderungsanalyse aktualisiert: FR-003 (volle Brus-Gleichung), NFR-004 (.NET 10), AC-001 (Literaturwert 2,1 eV), AC-004 (JSON-Test statt Code-Review)
 
 ### Aktueller Stand 3D-Ansicht
 

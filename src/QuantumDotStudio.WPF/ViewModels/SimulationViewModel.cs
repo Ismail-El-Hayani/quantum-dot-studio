@@ -17,7 +17,7 @@ public class SimulationViewModel : INotifyPropertyChanged
 {
     private readonly QuantumDotService _service;
     private readonly DispatcherTimer _recalcTimer;
-    private Material _selectedMaterial = MaterialDatabase.Defaults.First();
+    private Material _selectedMaterial;
     private double _radius_nm = 3.0;
     private QuantumDot _activeDot = new();
     private string? _validationMessage;
@@ -29,6 +29,9 @@ public class SimulationViewModel : INotifyPropertyChanged
         _service = new QuantumDotService();
         _recalcTimer = CreateRecalcTimer();
         Materials = new List<Material>(MaterialDatabase.Defaults);
+        // Auswahl aus derselben Listeninstanz initialisieren, damit die
+        // ComboBox-Referenz (SelectedItem) mit dem Feld uebereinstimmt.
+        _selectedMaterial = Materials[0];
         RecalculateCommand = new RelayCommand(_ => { _recalcTimer?.Stop(); Recalculate(); }, _ => CanRecalculate());
 
         Recalculate();
@@ -39,6 +42,7 @@ public class SimulationViewModel : INotifyPropertyChanged
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _recalcTimer = CreateRecalcTimer();
         Materials = new List<Material>(MaterialDatabase.Defaults);
+        _selectedMaterial = Materials[0];
         RecalculateCommand = new RelayCommand(_ => { _recalcTimer?.Stop(); Recalculate(); }, _ => CanRecalculate());
 
         Recalculate();

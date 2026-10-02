@@ -46,7 +46,13 @@ Stores bulk semiconductor parameters:
 | `Cation` | - | Cation element symbol |
 | `Anion` | - | Anion element symbol |
 
-Currently every material is treated as a binary zinc blende compound. Ternary/alloy materials would extend this model, see Section 9.
+Currently every material is treated as a binary zinc blende compound. Ternary/alloy materials would extend this model, see Section 12.
+
+Materials live in `src/QuantumDotStudio.Core/Data/materials.json` and are loaded
+once on first access (`MaterialDatabase.Defaults`, thread-safe via `Lazy`). The
+file is copied to the output directory at build time; adding an entry there adds
+a material to the application without any code change. A built-in fallback list
+(CdSe, InP, PbS) is used only if no valid JSON file is found.
 
 ### `QuantumDot`
 
@@ -83,7 +89,7 @@ Aggregates everything that belongs to one simulation step:
 
 ## 3. The solver (`QuantumSolver`)
 
-All calculations use the **infinite spherical quantum well** model with effective mass approximation. Coulomb and excitonic corrections are not included.
+All calculations use the **infinite spherical quantum well** model with effective mass approximation and the **full Brus equation** including the leading-order Coulomb term.
 
 ### 3.1 Confinement energy
 
@@ -113,10 +119,28 @@ Precomputed zeros:
 - `l = 2` (D): `5.763, 9.095, 12.323, ...`
 - Higher `l`: `(n + 0.5)·π` asymptotically
 
-### 3.2 Effective band gap (Brus formula)
+### 3.2 Coulomb term
+
+The electron-hole attraction in leading order (Brus 1984):
 
 ```
-E_QD = E_g,bulk + ΔE_e + ΔE_h
+E_C = −1.786 · e² / (4π ε₀ ε_r R)
+```
+
+Implemented in:
+
+```csharp
+QuantumSolver.CoulombEnergy(double R_nm, double dielectricConstant)
+```
+
+For CdSe at R = 3 nm this contributes about −0.08 eV, moving the predicted
+band gap toward the experimental sizing curve (Yu et al., Chem. Mater. 15
+(2003): ~2.0–2.1 eV for 6 nm diameter).
+
+### 3.3 Effective band gap (full Brus formula)
+
+```
+E_QD = E_g,bulk + ΔE_e + ΔE_h + E_C
 ```
 
 Implemented in:
@@ -125,9 +149,11 @@ Implemented in:
 QuantumSolver.BrusBandGap(Material material, double radius_nm)
 ```
 
-It calls `ConfinementEnergy(..., n=1, l=0)` for electron and hole and adds them to the bulk band gap.
+It calls `ConfinementEnergy(..., n=1, l=0)` for electron and hole, computes the
+Coulomb term from the dielectric constant, and adds all contributions to the
+bulk band gap.
 
-### 3.3 Emission wavelength
+### 3.4 Emission wavelength
 
 ```
 λ = h·c / E_QD
@@ -141,13 +167,13 @@ QuantumSolver.WavelengthFromBandGap(double bandGap_eV)
 
 Uses `h·c = 1.98644586e-25 J·m`. Returns λ in nm.
 
-### 3.4 Energy level series
+### 3.5 Energy level series
 
 ```csharp
 QuantumSolver.CalculateEnergyLevels(double R_nm, double mStar, int maxN, int maxL)
 ```
 
-Builds all `(n,l)` combinations up to `maxN` and `maxL`, labels them with spectroscopic notation (`1S`, `1P`, `2S`, ...), and sorts by energy. The WPF layer later prefixes electron levels with `e-` and hole levels with `h-`.
+Builds all `(n,l)` combinations up to `maxN` and `maxL`, labels them with spectroscopic notation (`1S`, `1P`, `2S`, ...), and sorts by energy. Each level carries a `Particle` property (`Electron` or `Hole`) set by `QuantumDotService`; the label itself stays prefix-free.
 
 ## 4. Lattice generation (`LatticeEngine`)
 
@@ -310,7 +336,7 @@ The camera is fitted once to the bounds of a 10 nm dot on load and stays fixed a
 
 - **Infinite well**: No finite barrier, no surface states.
 - **Effective mass**: Isotropic and material-independent inside the dot.
-- **No Coulomb/exciton terms**: The Brus formula used is the simplest form.
+- **Coulomb term in leading order only**: No full excitonic series, no exchange terms.
 - **Zinc blende only**: No ternary alloys, no core/shell structures.
 - **Static lattice**: No strain, relaxation, or ligand effects.
 - **1S electron cloud only**: No excited-state wave functions.
@@ -320,8 +346,14 @@ The camera is fitted once to the bounds of a 10 nm dot on load and stays fixed a
 
 | Feature | Files to touch |
 |---|---|
-| Ternary alloys (e.g. AgInS₂) | `Material.cs`, `MaterialDatabase.cs`, `LatticeEngine.cs`, `AtomPalette.cs` |
+| Ternary alloys (e.g. AgInS₂) | `Material.cs`, `materials.json`, `LatticeEngine.cs`, `AtomPalette.cs` |
 | Core/shell (e.g. AIS/ZnS) | `QuantumDot.cs`, `QuantumDotService.cs`, `LatticeEngine.cs`, `QuantumDotRenderer3D.cs`, `MainWindow.xaml` |
 | Better performance | `ProbabilityCloudGenerator.cs`, `QuantumDotService.cs`, `QuantumDotRenderer3D.cs` |
 | More accurate physics | `QuantumSolver.cs` (finite barriers, strain, exciton corrections) |
 | More plots | `PlotFactory.cs`, `MainWindow.xaml` |
+
+## 13. Continuous integration
+
+`.github/workflows/dotnet.yml` builds the solution and runs all xUnit tests on
+every push to `main` and on every pull request (windows-latest, .NET 10). Test
+results are uploaded as TRX artifacts.

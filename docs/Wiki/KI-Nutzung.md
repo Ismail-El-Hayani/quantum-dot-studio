@@ -36,6 +36,7 @@ Im Rahmen dieses Projekts werden KI-gestützte Tools als **Werkzeuge** eingesetz
 | `README.md` | Claude | Build-Anleitung und Projektbeschreibung |
 | Commit `441d3b7` (MVVM-Aufteilung, Validierung) | Hermes Agent | Review, Refactoring, lokale Commit-Erstellung |
 | Commit `eabdc41` (Renderer/Performance) | Hermes Agent | Caching, Renderer-Verbesserungen, UI-Toggles |
+| Commits `ce90f1d` (Brus-Gleichung + Coulomb-Term, Particle-Enum), `bb2f58b` (JSON-Materialdatenbank) sowie der Folgecommit (CI-Workflow, Cleanup, Dokumentation) | Hermes Agent (Claude 5.3) | Code-Review des Projekts, Physik-Korrektur nach Literaturvergleich (Yu et al. 2003), Refactoring, Tests, CI-Setup, Wiki- und README-Aktualisierung |
 
 ## Grenzen der KI-Nutzung
 

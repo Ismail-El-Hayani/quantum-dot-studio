@@ -13,9 +13,9 @@ Domänenmodelle und Datenhaltung. Keine externen UI-Abhängigkeiten.
 | `Material` | Physikalische Parameter eines Halbleiters: Bandlücke, effektive Massen, Gitterkonstante, Kation/Anion. |
 | `QuantumDot` | Zentrales Ergebnismodell: Atome, Energieniveaus, Elektronenwolke, Bandlücke, Wellenlänge. |
 | `Atom` | Ein Atom im Zinkblende-Gitter mit Element, Position und Darstellungsradius. |
-| `EnergyLevel` | Ein berechnetes Energieniveau mit Quantenzahlen, Energie und Label. |
+| `EnergyLevel` | Ein berechnetes Energieniveau mit Quantenzahlen, Energie, Label und Teilchentyp (`Particle`). |
 | `Vector3` | Eigener 3D-Vektor für Positionen (unabhängig von UI-Bibliotheken). |
-| `MaterialDatabase` | Statische Liste der Standardmaterialien (CdSe, InP, PbS). |
+| `MaterialDatabase` | Lädt Materialien aus `Data/materials.json` (Lazy, thread-sicher) mit eingebautem Fallback; `LoadFromFile`/`SaveToFile` für eigene Dateien. |
 
 ## QuantumDotStudio.Solver
 
@@ -35,6 +35,7 @@ Physikalische Berechnungen und Zusammenbau des `QuantumDot`-Objekts.
 ```csharp
 QuantumDot BuildQuantumDot(Material material, double radius_nm, int maxLevels = 6);
 double ConfinementEnergy(double radius_nm, double effectiveMass, int n, int l);
+double CoulombEnergy(double radius_nm, double dielectricConstant);
 double BrusBandGap(Material material, double radius_nm);
 double WavelengthFromBandGap(double bandGap_eV);
 ```
@@ -111,6 +112,6 @@ Tests    ──▶ Core, Solver, Renderer, Reports
 
 ## Erweiterung
 
-- Neue Materialien: Eintrag in `MaterialDatabase.Defaults` ergänzen.
+- Neue Materialien: Eintrag in `Data/materials.json` ergänzen — keine Code-Änderung nötig (getestet in `MaterialDatabaseTests`).
 - Neue Visualisierung: Methode in `QuantumDotRenderer3D.BuildModel` erweitern.
 - Neue Diagramme: Methode in `PlotFactory` hinzufügen und in `SimulationViewModel` binden.

@@ -29,6 +29,10 @@ Das Fenster ist in zwei Bereiche aufgeteilt:
 3. **Berechnen**: Klicken Sie auf **Berechnen**, um die Simulation neu zu starten.
    - Änderungen an Material oder Radius lösen automatisch eine Neuberechnung aus.
 
+> Hinweis für Fortgeschrittene: Die Materialliste stammt aus `Data/materials.json`.
+> Sie können dort weitere Halbleiter (z. B. ZnS oder CdTe) ergänzen, ohne den
+> Programmcode zu ändern — nach dem Neustart erscheinen sie im Dropdown.
+
 ## 4. 3D-Ansicht anpassen
 
 Unterhalb des Radius-Sliders befindet sich der Bereich **3D-Ansicht**:
