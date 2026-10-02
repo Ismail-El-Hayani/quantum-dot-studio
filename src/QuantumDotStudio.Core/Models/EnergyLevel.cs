@@ -21,7 +21,12 @@ public class EnergyLevel
     public double Energy_eV { get; set; }
 
     /// <summary>
-    /// Bezeichnung wie 1S, 1P, 2S, ...
+    /// Bezeichnung wie 1S, 1P, 2S, ... (ohne Teilchen-Präfix).
     /// </summary>
     public string Label { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Teilchentyp (Elektron oder Loch), zu dem dieses Niveau gehört.
+    /// </summary>
+    public Particle Particle { get; set; } = Particle.Electron;
 }

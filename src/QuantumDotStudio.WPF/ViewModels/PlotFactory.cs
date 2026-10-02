@@ -50,8 +50,8 @@ public static class PlotFactory
 
         foreach (var level in dot.EnergyLevels.Take(12))
         {
-            bool isElectron = level.Label.StartsWith("e-");
-            string baseLabel = level.Label.Replace("e-", "").Replace("h-", "");
+            bool isElectron = level.Particle == Particle.Electron;
+            string baseLabel = level.Label;
             if (!labels.Contains(baseLabel))
                 labels.Add(baseLabel);
 

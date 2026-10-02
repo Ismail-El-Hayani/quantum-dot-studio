@@ -82,7 +82,7 @@ public static class LatexReportGenerator
         sb.AppendLine(@"\begin{itemize}");
         sb.AppendLine(@"\item Unendlich hoher sphärischer Potentialtopf mit Radius $R$");
         sb.AppendLine(@"\item Isotrope effektive Masse $m^*$");
-        sb.AppendLine(@"\item Näherung ohne Coulomb-Wechselwirkung (vereinfachte Brus-Formel)");
+        sb.AppendLine(@"\item Coulomb-Wechselwirkung in führender Ordnung (Brus-Gleichung)");
         sb.AppendLine(@"\end{itemize}");
         sb.AppendLine();
 
@@ -96,9 +96,10 @@ public static class LatexReportGenerator
         sb.AppendLine();
 
         sb.AppendLine(@"\subsection{Effektive Bandlücke}");
-        sb.AppendLine(@"Die effektive Bandlücke des Quantum Dots ergibt sich aus der Bulk-Bandlücke $E_g$ und den Confinement-Energien von Elektron und Loch:");
+        sb.AppendLine(@"Die effektive Bandlücke des Quantum Dots folgt aus der Bulk-Bandlücke $E_g$,");
+        sb.AppendLine(@"den Confinement-Energien von Elektron und Loch sowie dem Coulomb-Term:");
         sb.AppendLine(@"\begin{equation}");
-        sb.AppendLine(@"E_{\text{QD}} = E_g + \Delta E_e + \Delta E_h.");
+        sb.AppendLine(@"E_{\text{QD}} = E_g + \Delta E_e + \Delta E_h - \frac{1{,}786\, e^2}{4 \pi \varepsilon_0 \varepsilon_r R}.");
         sb.AppendLine(@"\end{equation}");
         sb.AppendLine();
 
@@ -145,6 +146,7 @@ public static class LatexReportGenerator
         sb.AppendLine($"Anzahl Atome im Gitter & {dot.Atoms.Count} \\\\ ");
         sb.AppendLine($"Confinement-Energie Elektron & {dot.ConfinementEnergyElectron_eV:F4}\\,eV \\\\ ");
         sb.AppendLine($"Confinement-Energie Loch & {dot.ConfinementEnergyHole_eV:F4}\\,eV \\\\ ");
+        sb.AppendLine($@"Coulomb-Term $E_C$ & {dot.CoulombEnergy_eV:F4}\,eV \\ ");
         sb.AppendLine($@"Effektive Bandlücke $E_{{\text{{QD}}}}$ & {dot.TotalBandGap_eV:F4}\,eV \\ ");
         sb.AppendLine($@"Emissionswellenlänge $\lambda$ & {dot.EmissionWavelength_nm:F1}\,nm \\ ");
         sb.AppendLine(@"\bottomrule");
@@ -166,9 +168,8 @@ public static class LatexReportGenerator
 
         foreach (var level in dot.EnergyLevels.OrderBy(e => e.Energy_eV))
         {
-            var particle = level.Label.StartsWith("e-") ? "Elektron" : "Loch";
-            var label = level.Label.Replace("e-", "").Replace("h-", "");
-            sb.AppendLine($"{Escape(particle)} & {Escape(label)} & ({level.PrincipalQuantumNumber_n},{level.AngularMomentum_l}) & {level.Energy_eV:F4} \\\\ ");
+            var particle = level.Particle == Particle.Electron ? "Elektron" : "Loch";
+            sb.AppendLine($@"{Escape(particle)} & {Escape(level.Label)} & ({level.PrincipalQuantumNumber_n},{level.AngularMomentum_l}) & {level.Energy_eV:F4} \\ ");
         }
 
         sb.AppendLine(@"\bottomrule");

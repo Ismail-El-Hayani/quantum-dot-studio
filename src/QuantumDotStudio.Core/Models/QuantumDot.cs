@@ -28,6 +28,11 @@ public class QuantumDot
     public double ConfinementEnergyHole_eV { get; set; }
 
     /// <summary>
+    /// Coulomb-Anziehungsterm (führende Ordnung) in eV, typischerweise negativ.
+    /// </summary>
+    public double CoulombEnergy_eV { get; set; }
+
+    /// <summary>
     /// Effektive Gesamtbandlücke des Quantum Dots in eV.
     /// </summary>
     public double TotalBandGap_eV { get; set; }

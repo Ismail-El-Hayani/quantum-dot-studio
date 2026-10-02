@@ -43,8 +43,9 @@ public class QuantumDotService
         // Loch-Confinement (n=1, l=0)
         dot.ConfinementEnergyHole_eV = QuantumSolver.ConfinementEnergy(radius_nm, material.EffectiveMassHole, 1, 0);
 
-        // Effektive Bandlücke
+        // Effektive Bandlücke (volle Brus-Gleichung inkl. Coulomb-Term)
         dot.TotalBandGap_eV = QuantumSolver.BrusBandGap(material, radius_nm);
+        dot.CoulombEnergy_eV = QuantumSolver.CoulombEnergy(radius_nm, material.DielectricConstant);
 
         // Emissionswellenlänge
         dot.EmissionWavelength_nm = QuantumSolver.WavelengthFromBandGap(dot.TotalBandGap_eV);
@@ -53,11 +54,11 @@ public class QuantumDotService
         var electronLevels = QuantumSolver.CalculateEnergyLevels(radius_nm, material.EffectiveMassElectron, maxLevels, 2);
         var holeLevels = QuantumSolver.CalculateEnergyLevels(radius_nm, material.EffectiveMassHole, maxLevels, 2);
 
-        // Markiere Teilchenart über das Label
+        // Teilchenart am Niveau markieren
         foreach (var level in electronLevels)
-            level.Label = $"e-{level.Label}";
+            level.Particle = Particle.Electron;
         foreach (var level in holeLevels)
-            level.Label = $"h-{level.Label}";
+            level.Particle = Particle.Hole;
 
         dot.EnergyLevels = electronLevels.Concat(holeLevels).OrderBy(e => e.Energy_eV).ToList();
 
