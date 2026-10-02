@@ -5,13 +5,70 @@ namespace QuantumDotStudio.Core.Data;
 
 /// <summary>
 /// Lädt und speichert Materialparameter aus JSON.
+/// Die Standardmaterialien werden beim ersten Zugriff aus der ausgelieferten
+/// Datei <c>Data/materials.json</c> geladen; neue Materialien können dort
+/// ohne Code-Änderung ergänzt werden (NFR-003). Ist die Datei nicht
+/// verfügbar oder ungültig, greift die eingebaute Fallback-Liste.
 /// </summary>
 public static class MaterialDatabase
 {
     /// <summary>
-    /// Vordefinierte Halbleitermaterialien für Quantum Dots.
+    /// Kandidatenpfade für die Standard-Konfigurationsdatei, in Reihenfolge der Prüfung.
     /// </summary>
-    public static List<Material> Defaults => new()
+    private static readonly string[] JsonCandidates =
+    {
+        Path.Combine(AppContext.BaseDirectory, "Data", "materials.json"),
+        Path.Combine(AppContext.BaseDirectory, "materials.json"),
+        Path.Combine(Directory.GetCurrentDirectory(), "Data", "materials.json"),
+        "materials.json"
+    };
+
+    private static readonly Lazy<List<Material>> _defaults = new(LoadDefaults);
+
+    /// <summary>
+    /// Pfad der tatsächlich geladenen JSON-Datei, oder null, wenn der
+    /// eingebaute Fallback aktiv ist. Diagnosehilfe und Testanker.
+    /// </summary>
+    public static string? LoadedFrom { get; private set; }
+
+    /// <summary>
+    /// Verfügbare Halbleitermaterialien. Wird beim ersten Zugriff einmalig
+    /// aus <c>Data/materials.json</c> geladen (thread-sicher via Lazy).
+    /// </summary>
+    public static List<Material> Defaults => _defaults.Value;
+
+    private static List<Material> LoadDefaults()
+    {
+        foreach (string path in JsonCandidates)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                    continue;
+
+                List<Material> materials = LoadFromFile(path);
+                if (materials.Count > 0)
+                {
+                    LoadedFrom = path;
+                    return materials;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+            {
+                // Ungültige oder gesperrte Datei: nächsten Kandidaten versuchen,
+                // am Ende den eingebauten Fallback verwenden.
+            }
+        }
+
+        return FallbackDefaults;
+    }
+
+    /// <summary>
+    /// Eingebaute Fallback-Materialien für den Fall, dass keine gültige
+    /// JSON-Datei gefunden wird. Muss mit <c>Data/materials.json</c>
+    /// inhaltlich übereinstimmen.
+    /// </summary>
+    private static List<Material> FallbackDefaults => new()
     {
         new Material
         {
@@ -50,6 +107,8 @@ public static class MaterialDatabase
 
     /// <summary>
     /// Lädt Materialien aus einer JSON-Datei.
+    /// Existiert die Datei nicht, wird eine leere Liste zurückgegeben;
+    /// ungültiges JSON löst eine Ausnahme aus.
     /// </summary>
     public static List<Material> LoadFromFile(string path)
     {

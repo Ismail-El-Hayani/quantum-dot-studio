@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Materialdatenbank: wird ins Ausgabeverzeichnis aller referenzierenden
+         Projekte kopiert (auch transitiv) und beim Start geladen. -->
+    <None Include="Data\materials.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
