@@ -68,15 +68,19 @@ public class QuantumDotRenderer3D
             // Mesh-Merging: alle Atome eines Elements werden in EIN Mesh zusammengefasst.
             // Statt tausender einzelner GeometryModel3D-Objekte (Draw-Call-Overhead,
             // UI-Freeze bei großen Radien) entstehen nur so viele Kinder wie Elemente.
-            // Tessellation wird bei sehr großen Gittern reduziert (einfaches LOD).
-            bool dense = dot.Atoms.Count > 20000;
-            int tessU = dense ? 7 : 10;
-            int tessV = dense ? 5 : 8;
+            // Tessellation wird bei dichten Gittern stark reduziert (LOD): Atome sind
+            // dort ohnehin kleiner als ein Pixel — die Kugel-Vertexzahl dominiert
+            // Bauzeit und Speicher des Meshes.
+            int tessU, tessV;
+            if (dot.Atoms.Count > 40000)      { tessU = 4; tessV = 3; }
+            else if (dot.Atoms.Count > 10000) { tessU = 6; tessV = 5; }
+            else                              { tessU = 10; tessV = 8; }
 
             foreach (var elementGroup in dot.Atoms.GroupBy(a => a.Element, StringComparer.OrdinalIgnoreCase))
             {
                 var meshBuilder = new MeshBuilder();
                 Color color = AtomPalette.GetColorByElement(elementGroup.Key);
+                bool useBoxes = dot.Atoms.Count > 40000;
 
                 foreach (var atom in elementGroup)
                 {
@@ -86,7 +90,17 @@ public class QuantumDotRenderer3D
                         (float)((atom.Position.Z - centroid.Z) * visualScale));
                     var radius = (float)(atom.Radius_nm * AtomScale * visualScale);
 
-                    meshBuilder.AddSphere(center, radius, tessU, tessV);
+                    if (useBoxes)
+                    {
+                        // Bei >40k Atomen sind Kugeln unter einem Pixel groß:
+                        // Würfel (8 Vertizes statt ~18) sind visuell identisch
+                        // und senken die Mesh-Bauzeit drastisch.
+                        meshBuilder.AddBox(center, radius, radius, radius);
+                    }
+                    else
+                    {
+                        meshBuilder.AddSphere(center, radius, tessU, tessV);
+                    }
                 }
 
                 var geometry = ConvertToWpf(meshBuilder.ToMesh());
@@ -111,6 +125,13 @@ public class QuantumDotRenderer3D
                 Color.FromArgb(110, 200, 40, 60))); // 1P: halbtransparentes Dunkelrot
         }
 
+        // Freeze: macht die gesamte Szene (Meshes, Materialien, Brushes) unveränderlich
+        // und damit thread-übergreifend nutzbar. BuildModel kann so in einem
+        // Hintergrund-Task laufen und das fertige Modell gefroren an den UI-Thread
+        // übergeben werden — die UI blockiert nie auf dem Mesh-Bau.
+        if (group.CanFreeze)
+            group.Freeze();
+
         return group;
     }
 
@@ -130,18 +151,21 @@ public class QuantumDotRenderer3D
     private static System.Windows.Media.Media3D.MeshGeometry3D ConvertToWpf(HelixToolkit.Geometry.MeshGeometry3D source)
     {
         var wpf = new System.Windows.Media.Media3D.MeshGeometry3D();
+        // Collections vorab passend zur Quellgröße anlegen: vermeidet wiederholte
+        // interne Reallokationen beim schrittweisen Add von Millionen Vertizes.
+        wpf.Positions = new System.Windows.Media.Media3D.Point3DCollection(source.Positions.Count);
         foreach (var p in source.Positions)
             wpf.Positions.Add(new Point3D(p.X, p.Y, p.Z));
         if (source.Normals != null)
         {
+            wpf.Normals = new System.Windows.Media.Media3D.Vector3DCollection(source.Normals.Count);
             foreach (var n in source.Normals)
                 wpf.Normals.Add(new Vector3D(n.X, n.Y, n.Z));
         }
-        if (source.TextureCoordinates != null)
-        {
-            foreach (var tc in source.TextureCoordinates)
-                wpf.TextureCoordinates.Add(new Point(tc.X, tc.Y));
-        }
+        // Texturkoordinaten werden bewusst NICHT kopiert: alle Materialien dieses
+        // Renderers sind einfarbige SolidBrushes (keine Texturen), die UVs wären
+        // reiner Kopier-Overhead (bis zu Millionen Point-Add-Aufrufe bei dichten Gittern).
+        wpf.TriangleIndices = new System.Windows.Media.Int32Collection(source.TriangleIndices.Count);
         foreach (var idx in source.TriangleIndices)
             wpf.TriangleIndices.Add(idx);
         return wpf;

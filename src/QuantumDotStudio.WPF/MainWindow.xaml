@@ -6,12 +6,8 @@
         xmlns:helix="http://helix-toolkit.org/wpf"
         xmlns:oxy="http://oxyplot.org/wpf"
         xmlns:vm="clr-namespace:QuantumDotStudio.WPF.ViewModels"
-        xmlns:converters="clr-namespace:QuantumDotStudio.WPF.Converters"
         mc:Ignorable="d"
         Title="Quantum Dot Studio" Height="720" Width="1200">
-    <Window.Resources>
-        <converters:QuantumDotToModel3DConverter x:Key="QuantumDotToModel3DConverter" />
-    </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
@@ -116,16 +112,9 @@
                                      ClipToBounds="True"
                                      Cursor="Cross">
                     <helix:DefaultLights />
-                    <ModelVisual3D x:Name="AtomModelHost">
-                        <ModelVisual3D.Content>
-                            <MultiBinding Converter="{StaticResource QuantumDotToModel3DConverter}">
-                                <Binding Path="Simulation.ActiveDot" />
-                                <Binding Path="Simulation.ShowLattice" />
-                                <Binding Path="Simulation.ShowCloud" />
-                                <Binding Path="Simulation.ShowCloud1P" />
-                            </MultiBinding>
-                        </ModelVisual3D.Content>
-                    </ModelVisual3D>
+                    <!-- Bindet das im Hintergrund-Thread vorgebaute (geFrorene) Modell:
+                         der UI-Thread führt kein Mesh-Building mehr aus. -->
+                    <ModelVisual3D x:Name="AtomModelHost" Content="{Binding Simulation.Pending3DModel}" />
                 </helix:HelixViewport3D>
             </Border>
 

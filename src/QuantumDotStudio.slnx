@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="QuantumDotStudio.Core/QuantumDotStudio.Core.csproj" />
+  <Project Path="QuantumDotStudio.Bench/QuantumDotStudio.Bench.csproj" />
   <Project Path="QuantumDotStudio.Renderer/QuantumDotStudio.Renderer.csproj" />
   <Project Path="QuantumDotStudio.Reports/QuantumDotStudio.Reports.csproj" />
   <Project Path="QuantumDotStudio.Solver/QuantumDotStudio.Solver.csproj" />

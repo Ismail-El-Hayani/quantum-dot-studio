@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWpf>true</UseWpf>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\QuantumDotStudio.Core\QuantumDotStudio.Core.csproj" />
+    <ProjectReference Include="..\QuantumDotStudio.Solver\QuantumDotStudio.Solver.csproj" />
+    <ProjectReference Include="..\QuantumDotStudio.Renderer\QuantumDotStudio.Renderer.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Model3DGroup = System.Windows.Media.Media3D.Model3DGroup;
 
 namespace QuantumDotStudio.WPF.ViewModels;
 
@@ -360,15 +361,30 @@ public class SimulationViewModel : INotifyPropertyChanged
             if (want1P)
                 _service.EnsureElectronCloud1P(dot);
 
-            // Staleness-Guard + UI-Marshalling: im Unit-Test (kein Dispatcher)
-            // direkt zuweisen, in der Anwendung über den Application-Dispatcher.
+            // Mesh-Bau im Hintergrund: BuildModel liefert ein gefrorenes
+            // (thread-übergreifend nutzbares) Modell — der UI-Thread wartet
+            // nie auf teures Mesh-Building.
+            Model3DGroup? model = null;
             if (Application.Current?.Dispatcher is { } dispatcher)
             {
+                // Flags beim Betreten des Hintergrund-Threads einfrieren.
+                bool lat = _showLattice, c1s = _showCloud, c1p = _showCloud1P;
+                try
+                {
+                    model = new QuantumDotRenderer3D().BuildModel(dot, lat, c1s, c1p);
+                }
+                catch
+                {
+                    model = null; // Render-Fehler dürfen die Berechnung nicht killen
+                }
+
                 await dispatcher.InvokeAsync(() =>
                 {
                     if (seq != _recalcSequence)
-                        return;
+                        return; // veraltet: verworfen
                     ActiveDot = dot;
+                    _pendingModel = model;
+                    OnPropertyChanged(nameof(Pending3DModel));
                 });
             }
             else
@@ -378,6 +394,22 @@ public class SimulationViewModel : INotifyPropertyChanged
             }
         });
     }
+
+    /// <summary>
+    /// Vorgebautes 3D-Modell (im Hintergrund-Thread erzeugt und gefroren).
+    /// Die View bindet darauf statt den Konverter selbst rechnen zu lassen.
+    /// Null, solange kein aktuelles Modell vorliegt.
+    /// </summary>
+    public System.Windows.Media.Media3D.Model3DGroup? Pending3DModel
+    {
+        get => _pendingModel;
+        private set
+        {
+            _pendingModel = value;
+            OnPropertyChanged();
+        }
+    }
+    private System.Windows.Media.Media3D.Model3DGroup? _pendingModel;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
