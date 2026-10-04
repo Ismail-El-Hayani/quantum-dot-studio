@@ -64,7 +64,8 @@
                 <StackPanel>
                     <TextBlock Text="3D-Ansicht" FontWeight="Bold" Foreground="#e0e0ff" Margin="0,0,0,8" />
                     <CheckBox Content="Atomgitter anzeigen" IsChecked="{Binding Simulation.ShowLattice}" Foreground="#e0e0ff" Margin="0,0,0,6" />
-                    <CheckBox Content="Wahrscheinlichkeitswolke anzeigen" IsChecked="{Binding Simulation.ShowCloud}" Foreground="#e0e0ff" Margin="0,0,0,6" />
+                    <CheckBox Content="Wahrscheinlichkeitswolke anzeigen (1S)" IsChecked="{Binding Simulation.ShowCloud}" Foreground="#e0e0ff" Margin="0,0,0,6" />
+                    <CheckBox Content="1P-Zustand zusätzlich anzeigen" IsChecked="{Binding Simulation.ShowCloud1P}" Foreground="#e0e0ff" Margin="0,0,0,6" />
                     <Button Content="3D-Ansicht zurücksetzen" Click="Reset3DView_Click" Margin="0,0,0,8" />
 
                     <TextBlock Text="Legende" FontWeight="SemiBold" Foreground="#e0e0ff" Margin="0,8,0,4" />
@@ -121,6 +122,7 @@
                                 <Binding Path="Simulation.ActiveDot" />
                                 <Binding Path="Simulation.ShowLattice" />
                                 <Binding Path="Simulation.ShowCloud" />
+                                <Binding Path="Simulation.ShowCloud1P" />
                             </MultiBinding>
                         </ModelVisual3D.Content>
                     </ModelVisual3D>

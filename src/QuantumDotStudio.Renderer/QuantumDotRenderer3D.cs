@@ -32,12 +32,11 @@ public class QuantumDotRenderer3D
     public double CloudPointSize { get; set; } = 0.25;
 
     /// <summary>
-    /// Erzeugt eine Model3DGroup mit Atomen und optionaler Wahrscheinlichkeitswolke.
-    /// Das Modell wird so skaliert, dass der gewählte Radius konstant aussieht,
-    /// während die atomare Dichte mit dem Radius zunimmt.
-    /// Das Modell wird zusätzlich um seinen Schwerpunkt zentriert.
+    /// Erzeugt eine Model3DGroup mit Atomen (mesh-merged pro Element) und
+    /// optionalen Wahrscheinlichkeitswolken (1S blau, 1P dunkelrot).
+    /// Das Modell wird um seinen Schwerpunkt zentriert.
     /// </summary>
-    public Model3DGroup BuildModel(QuantumDot dot, bool showLattice = true, bool showCloud = true)
+    public Model3DGroup BuildModel(QuantumDot dot, bool showLattice = true, bool showCloud = true, bool showCloud1P = false)
     {
         var group = new Model3DGroup();
 
@@ -66,33 +65,50 @@ public class QuantumDotRenderer3D
 
         if (showLattice && dot.Atoms != null && dot.Atoms.Count > 0)
         {
-            foreach (var atom in dot.Atoms)
-            {
-                var center = new System.Numerics.Vector3(
-                    (float)((atom.Position.X - centroid.X) * visualScale),
-                    (float)((atom.Position.Y - centroid.Y) * visualScale),
-                    (float)((atom.Position.Z - centroid.Z) * visualScale));
-                var radius = (float)(atom.Radius_nm * AtomScale * visualScale);
-                var color = AtomPalette.GetColor(atom);
+            // Mesh-Merging: alle Atome eines Elements werden in EIN Mesh zusammengefasst.
+            // Statt tausender einzelner GeometryModel3D-Objekte (Draw-Call-Overhead,
+            // UI-Freeze bei großen Radien) entstehen nur so viele Kinder wie Elemente.
+            // Tessellation wird bei sehr großen Gittern reduziert (einfaches LOD).
+            bool dense = dot.Atoms.Count > 20000;
+            int tessU = dense ? 7 : 10;
+            int tessV = dense ? 5 : 8;
 
+            foreach (var elementGroup in dot.Atoms.GroupBy(a => a.Element, StringComparer.OrdinalIgnoreCase))
+            {
                 var meshBuilder = new MeshBuilder();
-                meshBuilder.AddSphere(center, radius, 14, 12);
+                Color color = AtomPalette.GetColorByElement(elementGroup.Key);
+
+                foreach (var atom in elementGroup)
+                {
+                    var center = new System.Numerics.Vector3(
+                        (float)((atom.Position.X - centroid.X) * visualScale),
+                        (float)((atom.Position.Y - centroid.Y) * visualScale),
+                        (float)((atom.Position.Z - centroid.Z) * visualScale));
+                    var radius = (float)(atom.Radius_nm * AtomScale * visualScale);
+
+                    meshBuilder.AddSphere(center, radius, tessU, tessV);
+                }
 
                 var geometry = ConvertToWpf(meshBuilder.ToMesh());
                 var material = MaterialHelper.CreateMaterial(color);
 
-                var model = new GeometryModel3D(geometry, material)
+                group.Children.Add(new GeometryModel3D(geometry, material)
                 {
                     BackMaterial = material
-                };
-
-                group.Children.Add(model);
+                });
             }
         }
 
         if (showCloud && dot.ElectronCloud != null && dot.ElectronCloud.Count > 0)
         {
-            group.Children.Add(BuildProbabilityCloud(dot.ElectronCloud, centroid, visualScale));
+            group.Children.Add(BuildCloudMesh(dot.ElectronCloud, centroid, visualScale,
+                Color.FromArgb(120, 30, 144, 255))); // 1S: halbtransparentes Dodger-Blau
+        }
+
+        if (showCloud1P && dot.ElectronCloud1P != null && dot.ElectronCloud1P.Count > 0)
+        {
+            group.Children.Add(BuildCloudMesh(dot.ElectronCloud1P, centroid, visualScale,
+                Color.FromArgb(110, 200, 40, 60))); // 1P: halbtransparentes Dunkelrot
         }
 
         return group;
@@ -131,7 +147,7 @@ public class QuantumDotRenderer3D
         return wpf;
     }
 
-    private GeometryModel3D BuildProbabilityCloud(List<(System.Numerics.Vector3 Position, float Probability)> cloud, System.Numerics.Vector3 centroid, double visualScale)
+    private GeometryModel3D BuildCloudMesh(List<(System.Numerics.Vector3 Position, float Probability)> cloud, System.Numerics.Vector3 centroid, double visualScale, Color color)
     {
         if (cloud.Count == 0)
         {
@@ -153,7 +169,6 @@ public class QuantumDotRenderer3D
         }
 
         var geometry = ConvertToWpf(meshBuilder.ToMesh());
-        var color = Color.FromArgb(120, 30, 144, 255); // halbtransparentes Dodger-Blau
         var material = MaterialHelper.CreateMaterial(color, 0.45);
 
         return new GeometryModel3D(geometry, material)

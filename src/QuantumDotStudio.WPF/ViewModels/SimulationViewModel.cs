@@ -5,6 +5,7 @@ using QuantumDotStudio.Solver;
 using OxyPlot;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -12,14 +13,16 @@ namespace QuantumDotStudio.WPF.ViewModels;
 
 /// <summary>
 /// ViewModel für Simulationsparameter, Validierung und Ergebnisse.
-/// Unterstützt homogene Quantum Dots und Core/Shell-Heterostrukturen:
-/// bei aktivem Shell-Modus wird statt BuildQuantumDot die Kern/Hüllen-
-/// Berechnung mit endlichem Potentialtopf, Band-Offsets und Strain genutzt.
+/// Unterstützt homogene Quantum Dots und Core/Shell-Heterostrukturen.
+/// Die Berechnung läuft asynchron auf einem Hintergrund-Thread (Task.Run)
+/// mit Staleness-Guard: nur das zuletzt angeforderte Ergebnis wird übernommen,
+/// schnelles Slider-Ziehen verwirft veraltete Zwischenstände.
 /// </summary>
 public class SimulationViewModel : INotifyPropertyChanged
 {
     private readonly QuantumDotService _service;
     private readonly DispatcherTimer _recalcTimer;
+    private int _recalcSequence; // Staleness-Guard für asynchrone Berechnungen
     private Material _selectedMaterial;
     private Material? _selectedShellMaterial;
     private double _shellThickness_nm;
@@ -29,6 +32,7 @@ public class SimulationViewModel : INotifyPropertyChanged
     private string? _validationMessage;
     private bool _showLattice = true;
     private bool _showCloud = true;
+    private bool _showCloud1P;
 
     public SimulationViewModel()
     {
@@ -227,6 +231,28 @@ public class SimulationViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// 1P-Wolke (erster angeregter Zustand, l=1) zusätzlich anzeigen.
+    /// Erzeugung erfolgt lazy beim ersten Aktivieren.
+    /// </summary>
+    public bool ShowCloud1P
+    {
+        get => _showCloud1P;
+        set
+        {
+            if (_showCloud1P != value)
+            {
+                _showCloud1P = value;
+                OnPropertyChanged(nameof(ShowCloud1P));
+                if (value)
+                {
+                    _service.EnsureElectronCloud1P(ActiveDot);
+                    OnPropertyChanged(nameof(ActiveDot)); // 3D-Konverter neu binden
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Einträge für die Farblegende der 3D-Visualisierung.
     /// </summary>
     public List<LegendItem> LegendItems
@@ -317,16 +343,40 @@ public class SimulationViewModel : INotifyPropertyChanged
         if (HasValidationError || SelectedMaterial == null)
             return;
 
-        if (_useShell && _selectedShellMaterial != null)
+        // Parameter-Momentaufnahme für den Hintergrund-Thread.
+        var core = SelectedMaterial;
+        var shell = _selectedShellMaterial;
+        double radius = _radius_nm;
+        double shellThickness = _shellThickness_nm;
+        bool useShell = _useShell;
+        bool want1P = _showCloud1P;
+        int seq = ++_recalcSequence;
+
+        _ = Task.Run(async () =>
         {
-            ActiveDot = _service.BuildCoreShellQuantumDot(
-                SelectedMaterial, _selectedShellMaterial,
-                _radius_nm, Math.Max(0.0, _shellThickness_nm));
-        }
-        else
-        {
-            ActiveDot = _service.BuildQuantumDot(SelectedMaterial, _radius_nm);
-        }
+            QuantumDot dot = useShell && shell != null
+                ? _service.BuildCoreShellQuantumDot(core, shell, radius, shellThickness)
+                : _service.BuildQuantumDot(core, radius);
+            if (want1P)
+                _service.EnsureElectronCloud1P(dot);
+
+            // Staleness-Guard + UI-Marshalling: im Unit-Test (kein Dispatcher)
+            // direkt zuweisen, in der Anwendung über den Application-Dispatcher.
+            if (Application.Current?.Dispatcher is { } dispatcher)
+            {
+                await dispatcher.InvokeAsync(() =>
+                {
+                    if (seq != _recalcSequence)
+                        return;
+                    ActiveDot = dot;
+                });
+            }
+            else
+            {
+                if (seq == _recalcSequence)
+                    ActiveDot = dot;
+            }
+        });
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

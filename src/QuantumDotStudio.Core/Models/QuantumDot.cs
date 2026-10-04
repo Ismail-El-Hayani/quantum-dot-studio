@@ -53,6 +53,12 @@ public class QuantumDot
     public List<(System.Numerics.Vector3 Position, float Probability)> ElectronCloud { get; set; } = new();
 
     /// <summary>
+    /// 1P-Elektronenwolke (n=1, l=1): torus-/hantelförmige Wahrscheinlichkeitsdichte
+    /// entlang der z-Achse. Wird nur bei Bedarf erzeugt (lazy).
+    /// </summary>
+    public List<(System.Numerics.Vector3 Position, float Probability)> ElectronCloud1P { get; set; } = new();
+
+    /// <summary>
     /// Atome des Zinkblende-Gitterausschnitts.
     /// </summary>
     public List<Atom> Atoms { get; set; } = new();

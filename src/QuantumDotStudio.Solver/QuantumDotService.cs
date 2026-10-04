@@ -28,8 +28,11 @@ public class QuantumDotService
             throw new ArgumentNullException(nameof(material));
 
         var key = (material.Name, radius_nm);
-        if (_cache.TryGetValue(key, out var cached))
-            return cached;
+        lock (_cache)
+        {
+            if (_cache.TryGetValue(key, out var cached))
+                return cached;
+        }
 
         var dot = new QuantumDot
         {
@@ -73,8 +76,26 @@ public class QuantumDotService
         var cloudGen = new ProbabilityCloudGenerator();
         dot.ElectronCloud = cloudGen.GenerateElectronCloud1S(radius_nm).ToList();
 
-        _cache[key] = dot;
+        lock (_cache)
+        {
+            _cache[key] = dot;
+        }
         return dot;
+    }
+
+    /// <summary>
+    /// Erzeugt die 1P-Elektronenwolke (n=1, l=1) für ein bestehendes Quantum Dot
+    /// und cached sie im Objekt. Lazy: erst bei aktivierter 1P-Anzeige berechnet,
+    /// da die 2×64k-Punktdurchläufe spürbare Rechenzeit kosten.
+    /// </summary>
+    public void EnsureElectronCloud1P(QuantumDot dot)
+    {
+        ArgumentNullException.ThrowIfNull(dot);
+        if (dot.ElectronCloud1P.Count > 0 || dot.Radius_nm <= 0)
+            return;
+
+        var cloudGen = new ProbabilityCloudGenerator();
+        dot.ElectronCloud1P = cloudGen.GenerateElectronCloud1P(dot.Radius_nm).ToList();
     }
 
     /// <summary>

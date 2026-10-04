@@ -19,11 +19,12 @@ public class QuantumDotToModel3DConverter : IMultiValueConverter
         var dot = values.ElementAtOrDefault(0) as QuantumDot;
         var showLattice = values.ElementAtOrDefault(1) as bool? ?? true;
         var showCloud = values.ElementAtOrDefault(2) as bool? ?? true;
+        var showCloud1P = values.ElementAtOrDefault(3) as bool? ?? false;
 
         if (dot == null)
             return new Model3DGroup();
 
-        return _renderer.BuildModel(dot, showLattice, showCloud);
+        return _renderer.BuildModel(dot, showLattice, showCloud, showCloud1P);
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
