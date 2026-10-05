@@ -21,6 +21,7 @@
     <ProjectReference Include="..\QuantumDotStudio.Solver\QuantumDotStudio.Solver.csproj" />
     <ProjectReference Include="..\QuantumDotStudio.Renderer\QuantumDotStudio.Renderer.csproj" />
     <ProjectReference Include="..\QuantumDotStudio.Reports\QuantumDotStudio.Reports.csproj" />
+    <ProjectReference Include="..\QuantumDotStudio.WPF\QuantumDotStudio.WPF.csproj" />
   </ItemGroup>
 
   <ItemGroup>

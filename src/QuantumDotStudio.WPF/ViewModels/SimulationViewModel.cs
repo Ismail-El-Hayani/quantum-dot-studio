@@ -344,6 +344,17 @@ public class SimulationViewModel : INotifyPropertyChanged
         if (HasValidationError || SelectedMaterial == null)
             return;
 
+        _ = RecalculateAsync();
+    }
+
+    /// <summary>
+    /// Berechnung inkl. Mesh-Bau, vollständig auf dem Hintergrund-Thread.
+    /// Rückgabe signalisiert, ob das Ergebnis übernommen wurde (nicht veraltet).
+    /// Im Test (ohne Dispatcher) sind ActiveDot und Pending3DModel direkt danach
+    /// gesetzt — dieser Pfad ist damit unit-testbar.
+    /// </summary>
+    internal async Task<bool> RecalculateAsync()
+    {
         // Parameter-Momentaufnahme für den Hintergrund-Thread.
         var core = SelectedMaterial;
         var shell = _selectedShellMaterial;
@@ -353,46 +364,45 @@ public class SimulationViewModel : INotifyPropertyChanged
         bool want1P = _showCloud1P;
         int seq = ++_recalcSequence;
 
-        _ = Task.Run(async () =>
+        QuantumDot dot = await Task.Run(() => useShell && shell != null
+            ? _service.BuildCoreShellQuantumDot(core, shell, radius, shellThickness)
+            : _service.BuildQuantumDot(core, radius));
+        if (want1P)
+            await Task.Run(() => _service.EnsureElectronCloud1P(dot));
+
+        // Mesh-Bau im Hintergrund: BuildModel liefert ein gefrorenes
+        // (thread-übergreifend nutzbares) Modell — der UI-Thread wartet
+        // nie auf teures Mesh-Building.
+        Model3DGroup? model = null;
+        bool lat = _showLattice, c1s = _showCloud, c1p = _showCloud1P;
+        try
         {
-            QuantumDot dot = useShell && shell != null
-                ? _service.BuildCoreShellQuantumDot(core, shell, radius, shellThickness)
-                : _service.BuildQuantumDot(core, radius);
-            if (want1P)
-                _service.EnsureElectronCloud1P(dot);
+            model = await Task.Run(() => new QuantumDotRenderer3D().BuildModel(dot, lat, c1s, c1p));
+        }
+        catch
+        {
+            model = null; // Render-Fehler dürfen die Berechnung nicht killen
+        }
 
-            // Mesh-Bau im Hintergrund: BuildModel liefert ein gefrorenes
-            // (thread-übergreifend nutzbares) Modell — der UI-Thread wartet
-            // nie auf teures Mesh-Building.
-            Model3DGroup? model = null;
-            if (Application.Current?.Dispatcher is { } dispatcher)
+        if (Application.Current?.Dispatcher is { } dispatcher)
+        {
+            await dispatcher.InvokeAsync(() =>
             {
-                // Flags beim Betreten des Hintergrund-Threads einfrieren.
-                bool lat = _showLattice, c1s = _showCloud, c1p = _showCloud1P;
-                try
-                {
-                    model = new QuantumDotRenderer3D().BuildModel(dot, lat, c1s, c1p);
-                }
-                catch
-                {
-                    model = null; // Render-Fehler dürfen die Berechnung nicht killen
-                }
+                if (seq != _recalcSequence)
+                    return; // veraltet: verworfen
+                ActiveDot = dot;
+                _pendingModel = model;
+                OnPropertyChanged(nameof(Pending3DModel));
+            });
+        }
+        else if (seq == _recalcSequence)
+        {
+            ActiveDot = dot;
+            _pendingModel = model;
+            OnPropertyChanged(nameof(Pending3DModel));
+        }
 
-                await dispatcher.InvokeAsync(() =>
-                {
-                    if (seq != _recalcSequence)
-                        return; // veraltet: verworfen
-                    ActiveDot = dot;
-                    _pendingModel = model;
-                    OnPropertyChanged(nameof(Pending3DModel));
-                });
-            }
-            else
-            {
-                if (seq == _recalcSequence)
-                    ActiveDot = dot;
-            }
-        });
+        return seq == _recalcSequence;
     }
 
     /// <summary>
