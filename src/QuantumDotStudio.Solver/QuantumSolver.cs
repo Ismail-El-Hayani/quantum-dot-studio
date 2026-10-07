@@ -14,33 +14,105 @@ public static class QuantumSolver
     private const double JouleMeter = 1.98644586e-25;           // h·c in J·m
     private const double CoulombConstant_eV_nm = 1.439964548;   // e²/(4πε₀) in eV·nm
 
+    // Cache für Bessel-Nullstellen: die Interlacing-Rekursion verzweigt sich
+    // zweiarmig (alpha_{n,l} braucht alpha_{n,l-1} und alpha_{n+1,l-1}), ohne
+    // Memoization würde der Aufrufbaum mit 2^l explodieren.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(int n, int l), double> _besselZeroCache = new();
+
+    private const int MaxL = 10; // Physik: höhere Drehimpulse sind im QD-Modell irrelevant
+
     /// <summary>
-    /// Liefert die Nullstellen der sphärischen Bessel-Funktion j_l, multipliziert mit π.
-    /// Für l=0: n*pi. Für l=1: Werte wie 4.493, 7.725, ...
+    /// Nullstelle alpha_{n,l} der sphärischen Bessel-Funktion j_l (n-te positive Nullstelle),
+    /// numerisch exakt statt asymptotischer Näherung: die Nullstellen von j_l schachteln
+    /// sich mit denen von j_{l-1}, daher ist (alpha_{n,l-1}, alpha_{n+1,l-1}) ein
+    /// Klammer-Intervall — rekursiv bis auf den exakten l=0-Fall n·π.
     /// </summary>
     private static double BesselZero(int n, int l)
     {
-        // Vorberechnete Werte für die ersten Niveaus im unendlichen sphärischen Topf.
-        // n = 1, 2, ... ; l = 0, 1, 2, ...
-        return l switch
+        if (n < 1) throw new ArgumentOutOfRangeException(nameof(n));
+        if (l < 0 || l > MaxL) throw new ArgumentOutOfRangeException(nameof(l));
+
+        return _besselZeroCache.GetOrAdd((n, l), key =>
         {
-            0 => n * Math.PI,
-            1 => n switch
+            if (key.l == 0) return key.n * Math.PI;
+
+            // Interlacing-Klammer: alpha_{n,l} liegt zwischen den l-1-Nullstellen n und n+1.
+            double lower = BesselZero(key.n, key.l - 1);
+            double upper = BesselZero(key.n + 1, key.l - 1);
+
+            return BisectionRoot(
+                x => SphericalBesselJ(key.l, x),
+                lower, upper,
+                tolerance: 1e-12);
+        });
+    }
+
+    /// <summary>
+    /// Sphärische Bessel-Funktion j_l(x) über die Aufwärts-Rekurrenz
+    /// j_{k+1}(x) = (2k+1)/x · j_k(x) − j_{k−1}(x), gestartet mit den exakten
+    /// Startwerten j_0 = sin x / x und j_1 = sin x / x² − cos x / x.
+    /// Für die hier benötigten Bereiche (l klein, x zwischen aufeinanderfolgenden
+    /// Nullstellen) ist die Rekurrenz stabil; Ergebnisse sind gegen
+    /// literaturbekannte Nullstellen getestet (BesselZeroTests).
+    /// </summary>
+    private static double SphericalBesselJ(int l, double x)
+    {
+        if (l < 0) throw new ArgumentOutOfRangeException(nameof(l));
+        if (x <= 0) return l == 0 ? 1.0 : 0.0;
+
+        if (l == 0) return Math.Sin(x) / x;
+        if (l == 1) return Math.Sin(x) / (x * x) - Math.Cos(x) / x;
+
+        double jPrev = Math.Sin(x) / x;                          // j_0
+        double jCurr = Math.Sin(x) / (x * x) - Math.Cos(x) / x;  // j_1
+        for (int k = 1; k < l; k++)
+        {
+            double jNext = (2.0 * k + 1.0) / x * jCurr - jPrev;
+            jPrev = jCurr;
+            jCurr = jNext;
+        }
+        return jCurr;
+    }
+
+    /// <summary>
+    /// Nullstellensuche per Bisektion auf einem garantierten Klammer-Intervall.
+    /// </summary>
+    private static double BisectionRoot(Func<double, double> f, double lower, double upper, double tolerance)
+    {
+        double fLower = f(lower);
+        double fUpper = f(upper);
+
+        // An den Intervallrändern kann numerisch exakt 0 auftreten.
+        if (Math.Abs(fLower) < 1e-30) return lower;
+        if (Math.Abs(fUpper) < 1e-30) return upper;
+
+        if (double.IsNaN(fLower) || double.IsNaN(fUpper))
+            throw new InvalidOperationException("Bessel-Nullstellensuche: NaN am Intervallrand");
+
+        bool signLower = fLower > 0;
+        if (signLower == (fUpper > 0))
+            throw new InvalidOperationException("Bessel-Nullstellensuche: kein Vorzeichenwechsel im Klammer-Intervall");
+
+        for (int i = 0; i < 200; i++)
+        {
+            double mid = 0.5 * (lower + upper);
+            double fMid = f(mid);
+
+            if (Math.Abs(fMid) < 1e-30 || upper - lower < tolerance)
+                return mid;
+
+            if ((fMid > 0) == signLower)
             {
-                1 => 4.493409458,
-                2 => 7.725251837,
-                3 => 10.90412166,
-                _ => (n + 0.5) * Math.PI // asymptotisch
-            },
-            2 => n switch
+                lower = mid;
+                signLower = fMid > 0;
+            }
+            else
             {
-                1 => 5.763459197,
-                2 => 9.095011331,
-                3 => 12.32294096,
-                _ => (n + 0.5) * Math.PI
-            },
-            _ => (n + 0.5) * Math.PI
-        };
+                upper = mid;
+            }
+        }
+
+        return 0.5 * (lower + upper);
     }
 
     /// <summary>
