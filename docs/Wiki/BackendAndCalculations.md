@@ -109,15 +109,15 @@ QuantumSolver.ConfinementEnergy(double R_nm, double mStar, int n, int l)
 
 Steps:
 1. Convert `R_nm` to meters.
-2. Look up `α_{n,l}` from precomputed values (`BesselZero`).
+2. Compute `α_{n,l}` numerically (`BesselZero`): n-th zero of `j_l` via interlacing bracket `(α_{n,l−1}, α_{n+1,l−1})` + bisection — exact for `l = 0` (`n·π`), no asymptotic fallback. Memoized per `(n, l)`, `l ≤ 10`.
 3. Compute energy in joules with `ℏ = 1.054571817e-34 J·s`.
 4. Convert to eV using `1 eV = 1.602176634e-19 J`.
 
-Precomputed zeros:
+Sample zeros (verified against independent ODE integration):
 - `l = 0` (S): `α = n·π`
-- `l = 1` (P): `4.493, 7.725, 10.904, ...`
-- `l = 2` (D): `5.763, 9.095, 12.323, ...`
-- Higher `l`: `(n + 0.5)·π` asymptotically
+- `l = 1` (P): `4.4934, 7.7253, 10.9041, 14.0662, 17.2208, ...`
+- `l = 2` (D): `5.7635, 9.0950, 12.3229, ...`
+- Higher `l`: computed, not approximated (`6.9879, 8.1826, 9.3558, ...`)
 
 ### 3.2 Coulomb term
 

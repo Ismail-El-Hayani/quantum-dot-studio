@@ -30,9 +30,9 @@ docs (Anforderungsanalyse, Tutorial) stay German.
 | 1.2 `FiniteWellSolver` (k·cot(kR) = −κ, bisection) | ✅ done, tested (incl. 3D binding threshold) |
 | 1.3 `StrainModel` (mismatch, critical thickness, relaxation flag) | ✅ done, tested |
 | Renderer for core/shell | ✅ free — lattice atoms carry per-element colors |
-| 1.2 Numeric Bessel zeros (replacing hardcoded table) | ⬜ open |
+| 1.2 Numeric Bessel zeros (replacing hardcoded table) | ✅ done (`c0bf4ec`) |
 | 1.4 UI: shell dropdown + thickness slider + band-edge profile plot | ✅ done — Shell-Modus-Toggle, Shell-Dropdown, Dicken-Slider, Bandprofil-Tab, Shell-Info in Ergebnissen + LaTeX-Kapitel |
-| 1.4 Tech debt: mesh-merge rendering, async recalc, 1P cloud | ⬜ open |
+| 1.4 Tech debt: mesh-merge rendering, async recalc, 1P cloud | ✅ done (`72c18a3`, `38ef5c7`, `9d9d8ea`) — mesh-merge + LOD + Freeze/Background-Mesh-Bau gemessen (13 s → 1.1 s @ 10 nm), RecalculateAsync testbar |
 
 Known tech debt (folded into Phase 1 below): one-mesh-per-atom rendering (perf),
 UI-thread recalculation, 1P excited state missing (FR-005), asymptotic Bessel
