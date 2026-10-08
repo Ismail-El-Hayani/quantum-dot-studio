@@ -10,6 +10,8 @@
     <!-- Materialdatenbank: wird ins Ausgabeverzeichnis aller referenzierenden
          Projekte kopiert (auch transitiv) und beim Start geladen. -->
     <None Include="Data\materials.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Data\ligands.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Data\analytes.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

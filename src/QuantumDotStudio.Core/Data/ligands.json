@@ -1,0 +1,38 @@
+[
+  {
+    "LigandId": "MPA",
+    "DisplayName": "Mercaptopropionic acid",
+    "AnchorAtom": "S",
+    "Length_nm": 0.6,
+    "Charge_e": -1,
+    "Targets": ["Cd", "Zn", "Pb"],
+    "Solubility": "aqueous"
+  },
+  {
+    "LigandId": "TGA",
+    "DisplayName": "Thioglycolic acid",
+    "AnchorAtom": "S",
+    "Length_nm": 0.5,
+    "Charge_e": -1,
+    "Targets": ["Cd", "Zn", "Pb"],
+    "Solubility": "aqueous"
+  },
+  {
+    "LigandId": "TOPO",
+    "DisplayName": "Trioctylphosphine oxide",
+    "AnchorAtom": "P",
+    "Length_nm": 1.1,
+    "Charge_e": 0,
+    "Targets": ["Cd", "In", "Pb"],
+    "Solubility": "organic"
+  },
+  {
+    "LigandId": "PEG-5000",
+    "DisplayName": "Polyethylene glycol 5000",
+    "AnchorAtom": "O",
+    "Length_nm": 5.0,
+    "Charge_e": 0,
+    "Targets": ["Zn", "Cd"],
+    "Solubility": "aqueous"
+  }
+]
