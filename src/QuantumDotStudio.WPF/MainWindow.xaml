@@ -128,6 +128,54 @@
                 <TabItem Header="Bandprofil">
                     <oxy:PlotView Model="{Binding Simulation.BandProfilePlot}" />
                 </TabItem>
+                <TabItem Header="Sensor">
+                    <Grid Margin="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="280" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Sensor-Konfiguration links -->
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <TextBlock Text="Funktionalisierung (Ligand)" FontWeight="SemiBold" />
+                            <ComboBox ItemsSource="{Binding Sensor.Ligands}"
+                                     SelectedItem="{Binding Sensor.SelectedLigand}"
+                                     DisplayMemberPath="DisplayName"
+                                     Margin="0,4,0,8" />
+                            <TextBlock Text="{Binding Sensor.LigandInfo}" TextWrapping="Wrap" FontSize="11" Foreground="SteelBlue" Margin="0,0,0,10" />
+
+                            <TextBlock Text="Analyt" FontWeight="SemiBold" />
+                            <ComboBox ItemsSource="{Binding Sensor.Analytes}"
+                                     SelectedItem="{Binding Sensor.SelectedAnalyte}"
+                                     DisplayMemberPath="DisplayName"
+                                     Margin="0,4,0,8" />
+                            <TextBlock Text="{Binding Sensor.AnalyteInfo}" TextWrapping="Wrap" FontSize="11" Foreground="SteelBlue" Margin="0,0,0,10" />
+
+                            <TextBlock Text="Konzentration / Aktivität (M)" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding Sensor.Concentration_M, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,2" />
+                            <TextBlock Text="{Binding Sensor.ConcentrationText}" FontSize="11" Foreground="Gray" Margin="0,0,0,10" />
+
+                            <TextBlock Text="Rezeptor-Abstand über Ligand (nm)" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding Sensor.ReceptorOffset_nm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
+
+                            <TextBlock Text="FRET: Abstand ungebunden — extra (nm)" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding Sensor.DistanceUnboundExtra_nm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,8" />
+                            <TextBlock Text="FRET: Abstand gebunden — extra (nm)" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding Sensor.DistanceBoundExtra_nm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,8" />
+                        </StackPanel>
+
+                        <!-- Antwort rechts -->
+                        <Grid Grid.Column="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="{Binding Sensor.ResponseSummary}" TextWrapping="Wrap"
+                                       FontFamily="Consolas" FontSize="12" Margin="4,0,4,8" />
+                            <oxy:PlotView Grid.Row="1" Model="{Binding Sensor.ResponsePlot}" />
+                        </Grid>
+                    </Grid>
+                </TabItem>
             </TabControl>
         </Grid>
     </Grid>

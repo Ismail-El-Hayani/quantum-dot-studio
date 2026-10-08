@@ -206,4 +206,186 @@ public static class PlotFactory
 
         return model;
     }
+
+    // =============================================================== Sensor
+
+    /// <summary>
+    /// Platzhalter-Plot, wenn kein Sensor konfiguriert werden kann.
+    /// </summary>
+    public static PlotModel CreateSensorPlaceholderPlot(string message)
+    {
+        return new PlotModel
+        {
+            Title = message,
+            Background = OxyColors.White
+        };
+    }
+
+    /// <summary>
+    /// FRET-Antwort: Transfer-Effizienz E(r) mit Markierung der ungebundenen
+    /// und gebundenen Donor-Akzeptor-Abstände (ratiometrisches Design).
+    /// </summary>
+    public static PlotModel CreateFretResponsePlot(double forsterRadius_nm, double rUnbound, double rBound)
+    {
+        var model = new PlotModel
+        {
+            Title = $"FRET-Antwort (R₀ = {forsterRadius_nm:F1} nm)",
+            Background = OxyColors.White
+        };
+        model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Donor-Akzeptor-Abstand r (nm)" });
+        model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Transfer-Effizienz E", Minimum = 0, Maximum = 1 });
+
+        double rMax = Math.Max(Math.Max(rUnbound, rBound) * 1.4, forsterRadius_nm * 2);
+        var curve = new LineSeries { Title = "E(r) = 1/(1+(r/R₀)⁶)", Color = OxyColors.DodgerBlue, StrokeThickness = 2 };
+        for (double r = 0.5; r <= rMax; r += rMax / 200.0)
+        {
+            double e = 1.0 / (1.0 + Math.Pow(r / forsterRadius_nm, 6));
+            curve.Points.Add(new DataPoint(r, e));
+        }
+        model.Series.Add(curve);
+
+        foreach (var (r, label, color) in new[]
+        {
+                 (rUnbound, "ungebunden", OxyColors.DarkOrange),
+                 (rBound, "gebunden", OxyColors.Green)
+             })
+        {
+            if (r <= 0) continue;
+            double e = 1.0 / (1.0 + Math.Pow(r / forsterRadius_nm, 6));
+            model.Annotations.Add(new LineAnnotation
+            {
+                Type = LineAnnotationType.Vertical,
+                X = r,
+                Color = color,
+                LineStyle = LineStyle.Solid,
+                Text = $"{label}: r={r:F2} nm, E={e * 100:F0} %"
+            });
+        }
+
+        model.Legends.Add(new Legend { LegendPosition = LegendPosition.TopRight, LegendFontSize = 9 });
+        return model;
+    }
+
+    /// <summary>
+    /// Quenching-Kalibrierkurve (Stern-Volmer): I/I0 vs. Konzentration
+    /// (log-Skala) mit Markierung der aktuellen Konzentration und LOD.
+    /// </summary>
+    public static PlotModel CreateQuenchingResponsePlot(double kSV_M, double currentConcentration_M)
+    {
+        var model = new PlotModel
+        {
+            Title = "Stern-Volmer-Quenching",
+            Background = OxyColors.White
+        };
+        model.Axes.Add(new LogarithmicAxis { Position = AxisPosition.Bottom, Title = "Konzentration [A] (M)" });
+        model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "I/I₀", Minimum = 0, Maximum = 1.05 });
+
+        var curve = new LineSeries { Title = "I/I₀ = 1/(1+K_SV[A])", Color = OxyColors.DodgerBlue, StrokeThickness = 2 };
+        double lod = (1.0 / 0.9 - 1.0) / kSV_M;
+        double cMin = Math.Max(lod / 100.0, 1e-12);
+        double cMax = 100.0 / kSV_M;
+        for (double c = cMin; c <= cMax; c *= 1.12)
+        {
+            curve.Points.Add(new DataPoint(c, 1.0 / (1.0 + kSV_M * c)));
+        }
+        model.Series.Add(curve);
+
+        model.Annotations.Add(new LineAnnotation
+        {
+            Type = LineAnnotationType.Vertical,
+            X = lod,
+            Color = OxyColors.Red,
+            LineStyle = LineStyle.Dot,
+            Text = $"LOD = {lod:E1} M"
+        });
+
+        if (currentConcentration_M > cMin && currentConcentration_M < cMax)
+        {
+            double i = 1.0 / (1.0 + kSV_M * currentConcentration_M);
+            model.Annotations.Add(new LineAnnotation
+            {
+                Type = LineAnnotationType.Vertical,
+                X = currentConcentration_M,
+                Color = OxyColors.Green,
+                LineStyle = LineStyle.Solid,
+                Text = $"[A]={currentConcentration_M:E1}, I/I₀={i * 100:F0} %"
+            });
+        }
+
+        model.Legends.Add(new Legend { LegendPosition = LegendPosition.TopRight, LegendFontSize = 9 });
+        return model;
+    }
+
+    /// <summary>
+    /// Charge/pH-Antwort: Nernst-Potential vs. pH (log-Aktivitaet).
+    /// </summary>
+    public static PlotModel CreateChargeResponsePlot(double slope_mV_per_decade)
+    {
+        var model = new PlotModel
+        {
+            Title = "Nernst-Antwort (Oberflächenpotential)",
+            Background = OxyColors.White
+        };
+        model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "pH", Minimum = 0, Maximum = 14 });
+        model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "ψ (mV)" });
+
+        var curve = new LineSeries { Title = "ψ = slope · log₁₀(10⁻pH)", Color = OxyColors.DodgerBlue, StrokeThickness = 2 };
+        for (double ph = 0; ph <= 14; ph += 0.25)
+        {
+            curve.Points.Add(new DataPoint(ph, slope_mV_per_decade * Math.Log10(Math.Pow(10, -ph))));
+        }
+        model.Series.Add(curve);
+
+        model.Legends.Add(new Legend { LegendPosition = LegendPosition.TopRight, LegendFontSize = 9 });
+        return model;
+    }
+
+    /// <summary>
+    /// PET-Antwort: Quench-Fraktion vs. Analyt-Redoxpotential mit Markierung
+    /// der CB-Kante des aktiven QD.
+    /// </summary>
+    public static PlotModel CreatePetResponsePlot(QuantumDot dot, Analyte analyte)
+    {
+        var model = new PlotModel
+        {
+            Title = "PET-Antwort (Energetik)",
+            Background = OxyColors.White
+        };
+        model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Redoxpotential E₀ (V vs. NHE)" });
+        model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Quench-Fraktion", Minimum = 0, Maximum = 1 });
+
+        double cb = dot.Material.ElectronAffinity_eV - 4.44;
+        var curve = new LineSeries { Title = "Quench-Fraktion(E₀)", Color = OxyColors.DodgerBlue, StrokeThickness = 2 };
+        for (double e0 = cb - 0.5; e0 <= cb + 0.5; e0 += 0.01)
+        {
+            double gap = cb - e0;
+            double frac = 1.0 / (1.0 + Math.Exp(gap / 0.0257));
+            curve.Points.Add(new DataPoint(e0, frac));
+        }
+        model.Series.Add(curve);
+
+        model.Annotations.Add(new LineAnnotation
+        {
+            Type = LineAnnotationType.Vertical,
+            X = cb,
+            Color = OxyColors.Red,
+            LineStyle = LineStyle.Dash,
+            Text = $"CB-Kante = {cb:F2} V"
+        });
+
+        if (analyte.RedoxPotential_V != 0)
+        {
+            model.Annotations.Add(new LineAnnotation
+            {
+                Type = LineAnnotationType.Vertical,
+                X = analyte.RedoxPotential_V,
+                Color = OxyColors.Green,
+                LineStyle = LineStyle.Solid,
+                Text = $"E₀ = {analyte.RedoxPotential_V:F2} V"
+            });
+        }
+
+        model.Legends.Add(new Legend { LegendPosition = LegendPosition.TopLeft, LegendFontSize = 9 });
+        return model;
+    }
 }
