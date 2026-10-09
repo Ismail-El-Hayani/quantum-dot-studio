@@ -47,5 +47,26 @@
     "Mode": "PET",
     "RedoxPotential_V": 0.35,
     "Notes": "E0(Ascorbat/Dehydroascorbat) ~ +0.35 V vs. NHE bei pH 7 (typisch)"
+  },
+  {
+    "AnalyteId": "Acetamiprid",
+    "DisplayName": "Acetamiprid (Neonicotinoid-Pestizid, FRET)",
+    "Mode": "FRET",
+    "ForsterRadius_nm": 4.815,
+    "Notes": "Xiang & Tang, RSC Adv. 7, 8332 (2017): CdTe-Donor 650 nm / Cy5.5-Akzeptor 708 nm, R0 = 4.815 nm experimentell"
+  },
+  {
+    "AnalyteId": "Glucose",
+    "DisplayName": "Glucose (GOx-katalysiert, PET via H2O2)",
+    "Mode": "PET",
+    "RedoxPotential_V": 1.776,
+    "Notes": "GOx: glucose + O2 -> gluconolactone + H2O2; E0(H2O2/H2O) = +1.776 V vs. NHE — PET-Quenching weit oberhalb jeder QD-CB-Kante; LOD 0.35-0.97 mM (Si-QD turn-off)"
+  },
+  {
+    "AnalyteId": "IgG",
+    "DisplayName": "Immunoglobulin G (Sandwich-Immunoassay)",
+    "Mode": "FRET",
+    "ForsterRadius_nm": 6.0,
+    "Notes": "Goldman et al., Anal. Chem. 74, 841 (2002): CdSe/ZnS DHLA + Protein G, Sandwich-Fluoroimmunoassay; typische R0 ~ 6 nm QD/Dye; Qian 2010: IgG LOD 0.6-1.3 pg/mL"
   }
 ]

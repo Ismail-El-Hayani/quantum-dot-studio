@@ -212,11 +212,19 @@ public static class FeasibilityFactors
     /// Zielkonzentration. Regel der Roadmap: der relevante Bereich muss
     /// >= 10x Spanne um das Ziel abdecken. K_D ~ Ziel: 1.0;
     /// K_D &gt;&gt; Ziel: faellt logarithmisch (bindet nicht).
+    /// Null (kein Rezeptor) ist bei Direktdetektion normal — Quenching/PET/
+    /// Charge wirken direkt auf der QD-Oberflaeche, die Wechselwirkung ist
+    /// bereits Faktor 4 (Transduktion) bewertet. Nur FRET-artige Designs
+    /// (Aptamer/Immuno) benoetigen einen Rezeptor mit passendem K_D.
     /// Roadmap 3.1 Faktor 6.
     /// </summary>
-    public static double BioconjugationScore(double? receptorKd_M, double targetConcentration_M)
+    public static double BioconjugationScore(double? receptorKd_M, double targetConcentration_M, string mode = "")
     {
-        if (receptorKd_M is null || receptorKd_M <= 0 || targetConcentration_M <= 0)
+        bool needsReceptor = mode.Equals("FRET", StringComparison.OrdinalIgnoreCase);
+        if (receptorKd_M is null)
+            return needsReceptor ? 0.0 : 1.0; // Direktdetektion: kein Rezeptor noetig
+
+        if (receptorKd_M <= 0 || targetConcentration_M <= 0)
             return 0.0;
 
         double ratio = targetConcentration_M / receptorKd_M.Value;

@@ -55,6 +55,17 @@
     "Anion": "Se"
   },
   {
+    "Name": "CdTe",
+    "BandGap_eV": 1.5,
+    "EffectiveMassElectron": 0.11,
+    "EffectiveMassHole": 0.35,
+    "DielectricConstant": 10.2,
+    "LatticeConstant_A": 6.482,
+    "ElectronAffinity_eV": 4.3,
+    "Cation": "Cd",
+    "Anion": "Te"
+  },
+  {
     "Name": "ZnS",
     "BandGap_eV": 3.68,
     "EffectiveMassElectron": 0.28,

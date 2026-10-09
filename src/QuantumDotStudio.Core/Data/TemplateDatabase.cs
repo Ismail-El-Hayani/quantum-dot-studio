@@ -66,6 +66,20 @@ public static class TemplateDatabase
             EmissionWindowMin_nm = 480, EmissionWindowMax_nm = 680, Medium = "aqueous",
             WeightEmissionWindow = 0.15, WeightStrain = 0.15, WeightQuantumYield = 0.15,
             WeightTransduction = 0.35, WeightStability = 0.15, WeightBioconjugation = 0.05
+        },
+        new ApplicationTemplate
+        {
+            ApplicationId = "pesticide-sensing", DisplayName = "Pestizid-Aptasensor (sichtbar, ratiometrisch)",
+            EmissionWindowMin_nm = 550, EmissionWindowMax_nm = 750, Medium = "aqueous",
+            WeightEmissionWindow = 0.20, WeightStrain = 0.10, WeightQuantumYield = 0.15,
+            WeightTransduction = 0.30, WeightStability = 0.15, WeightBioconjugation = 0.10
+        },
+        new ApplicationTemplate
+        {
+            ApplicationId = "metabolite-sensing", DisplayName = "Metabolit-Sensor (Glucose, klinisch)",
+            EmissionWindowMin_nm = 500, EmissionWindowMax_nm = 700, Medium = "aqueous",
+            WeightEmissionWindow = 0.15, WeightStrain = 0.10, WeightQuantumYield = 0.20,
+            WeightTransduction = 0.30, WeightStability = 0.20, WeightBioconjugation = 0.05
         }
     };
 

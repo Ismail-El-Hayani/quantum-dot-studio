@@ -40,5 +40,33 @@
     "WeightTransduction": 0.35,
     "WeightStability": 0.15,
     "WeightBioconjugation": 0.05
+  },
+  {
+    "ApplicationId": "pesticide-sensing",
+    "DisplayName": "Pestizid-Aptasensor (sichtbar, ratiometrisch)",
+    "EmissionWindowMin_nm": 550,
+    "EmissionWindowMax_nm": 750,
+    "Medium": "aqueous",
+    "ConcentrationSpanDecades": 3,
+    "WeightEmissionWindow": 0.20,
+    "WeightStrain": 0.10,
+    "WeightQuantumYield": 0.15,
+    "WeightTransduction": 0.30,
+    "WeightStability": 0.15,
+    "WeightBioconjugation": 0.10
+  },
+  {
+    "ApplicationId": "metabolite-sensing",
+    "DisplayName": "Metabolit-Sensor (Glucose, klinisch)",
+    "EmissionWindowMin_nm": 500,
+    "EmissionWindowMax_nm": 700,
+    "Medium": "aqueous",
+    "ConcentrationSpanDecades": 2,
+    "WeightEmissionWindow": 0.15,
+    "WeightStrain": 0.10,
+    "WeightQuantumYield": 0.20,
+    "WeightTransduction": 0.30,
+    "WeightStability": 0.20,
+    "WeightBioconjugation": 0.05
   }
 ]

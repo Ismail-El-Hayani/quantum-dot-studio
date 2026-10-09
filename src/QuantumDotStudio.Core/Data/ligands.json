@@ -34,5 +34,23 @@
     "Charge_e": 0,
     "Targets": ["Zn", "Cd"],
     "Solubility": "aqueous"
+  },
+  {
+    "LigandId": "GOx",
+    "DisplayName": "Glucose oxidase (Enzym)",
+    "AnchorAtom": "S",
+    "Length_nm": 6.0,
+    "Charge_e": -1,
+    "Targets": ["Cd", "Zn"],
+    "Solubility": "aqueous"
+  },
+  {
+    "LigandId": "ProteinG",
+    "DisplayName": "Protein G (IgG-Bindungsprotein)",
+    "AnchorAtom": "N",
+    "Length_nm": 3.0,
+    "Charge_e": 0,
+    "Targets": ["Cd", "Zn"],
+    "Solubility": "aqueous"
   }
 ]
