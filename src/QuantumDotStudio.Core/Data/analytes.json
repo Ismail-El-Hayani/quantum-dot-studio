@@ -33,5 +33,19 @@
     "Mode": "Charge",
     "NernstSlope_mV_per_decade": 59.16,
     "Notes": "59.16 mV/Dekade bei 25 C (Nernst-Gleichung)"
+  },
+  {
+    "AnalyteId": "Dopamine",
+    "DisplayName": "Dopamin (PET-Quencher)",
+    "Mode": "PET",
+    "RedoxPotential_V": 0.21,
+    "Notes": "E0(Dopamin/Dopamin-o-chinon) ~ +0.21 V vs. NHE bei pH 7 (typischer Literaturwert); PET-Quenching von CdSe-ZD-Emission"
+  },
+  {
+    "AnalyteId": "Ascorbate",
+    "DisplayName": "Ascorbat / Vitamin C (PET-Quencher)",
+    "Mode": "PET",
+    "RedoxPotential_V": 0.35,
+    "Notes": "E0(Ascorbat/Dehydroascorbat) ~ +0.35 V vs. NHE bei pH 7 (typisch)"
   }
 ]

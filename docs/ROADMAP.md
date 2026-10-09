@@ -101,7 +101,7 @@ within 10 % of literature, recalc at 10 nm < 200 ms, all tests green in CI.
 
 ---
 
-## 2. Phase 2 — Sensor physics modes
+## 2. Phase 2 — Sensor physics modes — ✅ complete (`38d38ba`, `29683c0`)
 
 The app learns what a sensor *is*: a QD whose optical response changes
 predictably in the presence of an analyte.

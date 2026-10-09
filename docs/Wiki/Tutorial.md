@@ -55,6 +55,7 @@ Unterhalb des Radius-Sliders befindet sich der Bereich **3D-Ansicht**:
 
 - **Atomgitter anzeigen**: Schaltet die Darstellung der Zinkblende-Atome ein/aus.
 - **Wahrscheinlichkeitswolke anzeigen**: Schaltet die 1S-Elektronenwolke ein/aus.
+- **1P-Zustand zusätzlich anzeigen**: Zeigt zusätzlich die erste angeregte Wolke (dunkelrot, Hantelform entlang z).
 
 Die Farblegende zeigt, welche Farbe welchem Element (Kation/Anion) zugeordnet ist.
 
@@ -68,11 +69,27 @@ Im Panel **Ergebnisse** werden angezeigt:
 
 ## 7. Diagramme
 
-Unten finden Sie drei Tabs mit Plots:
+Unten finden Sie vier Tabs mit Plots:
 
 - **Energie**: Balkendiagramm der berechneten Elektron- und Loch-Niveaus.
 - **Spektrum**: Gauß-förmiger Peak, der die größenabhängige Bandlückenverschiebung visualisiert.
 - **Bandprofil**: (im Shell-Modus) Radiales Leitungs-/Valenzbandprofil mit Band-Offsets und gebundenen Niveaus.
+- **Sensor**: Konfiguration eines QD-Sensors und Darstellung der transduzierten Antwort (siehe Abschnitt 7a).
+
+## 7a. Sensor-Tab
+
+Der vierte Tab macht aus dem simulierten Quantum Dot einen **Sensor-Prototyp**:
+
+1. **Funktionalisierung (Ligand)** wählen — z.B. MPA (thiol-basiert, bindet an Cd/Zn-Oberflächen).
+2. **Analyt** wählen — der Eintrag legt den Transduktionsmodus fest:
+   - *FRET* (Fluorescein, Rhodamin 6G): ratiometrischer Donor-Akzeptor-Transfer; es gelten r(ungebunden)/r(gebunden) und die Design-Regel Δr ≥ 1 nm.
+   - *Quenching* (Pb²⁺, Hg²⁺): Stern–Volmer-Intensitätsabfall mit LOD-Anzeige; Konzentration einstellbar.
+   - *Charge* (H⁺/pH): Nernst-Oberflächenpotential und geschätzter Spektralshift.
+   - *PET* (Dopamin, Ascorbat): Energetik-Kriterium — Elektronentransfer ist möglich, wenn das Redoxpotential des Analyten über der Leitungsbandkante des QD liegt (Quench-ON/OFF).
+3. Die **Konzentration** (M) bzw. Aktivität einstellen und bei FRET die Abstands-Extras der beiden Zustände.
+4. Rechts erscheinen Readout-Zusammenfassung (mit ✓/⚠-Verdikt) und der Antwortplot (E(r)-Kurve, Stern–Volmer-Kalibrierkurve, Nernst-Kurve bzw. PET-Energetik).
+
+Liganden und Analyten sind reine JSON-Dateien (`src/QuantumDotStudio.Core/Data/ligands.json` bzw. `analytes.json`) — neue Einträge erfordern keine Code-Änderung.
 
 ## 8. Bericht exportieren
 

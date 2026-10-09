@@ -92,7 +92,7 @@ src\QuantumDotStudio.WPF\bin\Debug\net10.0-windows\QuantumDotStudio.WPF.exe
 
 ## Projektstatus
 
-Eigenständiges Projekt, aktiv entwickelt. Aktueller Stand: **Core/Shell-Physik und -UI fertig** (Phase 1 des Entwicklungsplans), laufend erweitert Richtung Sensor-Design-Plattform — siehe [docs/ROADMAP.md](docs/ROADMAP.md).
+Eigenständiges Projekt, aktiv entwickelt. Aktueller Stand: **Core/Shell-Physik und Sensor-Modi fertig** (Phase 1–2 des Entwicklungsplans: Core/Shell-Modell, FRET-, Quenching-, Charge- und PET-Sensorik), laufend erweitert Richtung Wahrscheinlichkeits-Engine — siehe [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Git Workflow
 

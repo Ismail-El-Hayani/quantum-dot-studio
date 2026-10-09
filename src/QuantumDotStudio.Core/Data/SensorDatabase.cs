@@ -94,7 +94,9 @@ public static class SensorDatabase
         new Analyte { AnalyteId = "Rhodamine6G", DisplayName = "Rhodamine 6G (FRET-Akzeptor)", Mode = "FRET", ForsterRadius_nm = 5.5, Notes = "typischer Paar-Abstand" },
         new Analyte { AnalyteId = "Pb2+", DisplayName = "Pb(II)-Ion", Mode = "Quenching", SternVolmerConstant_M = 4.2e5, Notes = "K_SV ~ 4e5 M^-1 (CdSe/ZnS-MPA)" },
         new Analyte { AnalyteId = "Hg2+", DisplayName = "Hg(II)-Ion", Mode = "Quenching", SternVolmerConstant_M = 1.0e6, Notes = "Hg quencht staerker als Pb" },
-        new Analyte { AnalyteId = "H+", DisplayName = "Proton (pH)", Mode = "Charge", NernstSlope_mV_per_decade = 59.16, Notes = "59.16 mV/Dekade bei 25 C" }
+        new Analyte { AnalyteId = "H+", DisplayName = "Proton (pH)", Mode = "Charge", NernstSlope_mV_per_decade = 59.16, Notes = "59.16 mV/Dekade bei 25 C" },
+        new Analyte { AnalyteId = "Dopamine", DisplayName = "Dopamin (PET-Quencher)", Mode = "PET", RedoxPotential_V = 0.21, Notes = "E0 ~ +0.21 V vs. NHE (pH 7)" },
+        new Analyte { AnalyteId = "Ascorbate", DisplayName = "Ascorbat / Vitamin C (PET-Quencher)", Mode = "PET", RedoxPotential_V = 0.35, Notes = "E0 ~ +0.35 V vs. NHE (pH 7)" }
     };
 
     private static JsonSerializerOptions JsonOptions => new()
