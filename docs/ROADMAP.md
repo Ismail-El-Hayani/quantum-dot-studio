@@ -230,7 +230,7 @@ tests (monotonicity + boundary values); Monte Carlo band stable at N = 2000
 
 ---
 
-## 4. Phase 4 — Sensor templates & literature validation
+## 4. Phase 4 — Sensor templates & literature validation — ✅ complete (`2932c88`, `2972f89`, `9320dcb`)
 
 - **Template library** (`Data/sensor_templates.json`): pre-parameterized designs
   with references — glucose-GOx FRET sensor, Pb²⁺ quenching sensor, pH sensor,
@@ -244,6 +244,17 @@ tests (monotonicity + boundary values); Monte Carlo band stable at N = 2000
 
 **Exit criteria:** ≥ 3 templates whose predicted P correctly ranks the
 literature-validated designs above known-failure designs.
+
+**Delivered:** 5 templates from the project's own literature base (Xiang &
+Tang 2017 acetamiprid-FRET, Li 2013 Pb²⁺, Daramola 2020 pH, Chen glucose-GOx,
+Goldman 2002 IgG); `Phase4ValidationTests` pins the ranking criterion
+(each literature design > its known failure: collapsed FRET distance, bare
+core in water, relaxed thick shell) and the ±20 % Brus validation
+(Han 2001 CdSe series, Xiang & Tang CdTe 650 nm); `SensorSelectivity`
+implements factor 4b (Hg²⁺ interferes Pb²⁺, aptamer-FRET > metal quenching)
+and is wired into the engine's transduction factor. Template picker in the
+Machbarkeit tab. The optional response-time estimate remains open (documented
+as future work).
 
 ---
 

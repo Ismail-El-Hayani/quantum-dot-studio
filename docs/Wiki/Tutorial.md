@@ -69,7 +69,7 @@ Im Panel **Ergebnisse** werden angezeigt:
 
 ## 7. Diagramme
 
-Unten finden Sie vier Tabs mit Plots:
+Unten finden Sie **fünf Tabs** mit Plots und Panels:
 
 - **Energie**: Balkendiagramm der berechneten Elektron- und Loch-Niveaus.
 - **Spektrum**: Gauß-förmiger Peak, der die größenabhängige Bandlückenverschiebung visualisiert.
@@ -90,6 +90,25 @@ Der vierte Tab macht aus dem simulierten Quantum Dot einen **Sensor-Prototyp**:
 4. Rechts erscheinen Readout-Zusammenfassung (mit ✓/⚠-Verdikt) und der Antwortplot (E(r)-Kurve, Stern–Volmer-Kalibrierkurve, Nernst-Kurve bzw. PET-Energetik).
 
 Liganden und Analyten sind reine JSON-Dateien (`src/QuantumDotStudio.Core/Data/ligands.json` bzw. `analytes.json`) — neue Einträge erfordern keine Code-Änderung.
+
+## 7b. Machbarkeits-Tab
+
+Der fünfte Tab beantwortet die Kernfrage des Projekts: **Wie wahrscheinlich ist es, dass dieser Sensor-Entwurf funktioniert?**
+
+1. **Literatur-Design (Vorlage)** wählen — lädt ein publiziertes, validiertes Design mit allen Parametern:
+   - *Acetamiprid-FRET* (Xiang & Tang 2017): CdTe-Donor, R₀ = 4.815 nm, K_D = 0.58 mM
+   - *Pb²⁺-Quenching* (Li 2013): CdSe/ZnS-MPA am EPA-Grenzwert 72 nM
+   - *pH* (Daramola 2020): dual-capped CdTe, physiologischer Bereich
+   - *Glucose-GOx* (Chen): H₂O₂-PET-Quenching, Blutglukose ~5 mM
+   - *IgG-Immunosensor* (Goldman 2002): CdSe/ZnS + Protein G
+   Oder eigene Parameter frei einstellen.
+2. **Anwendungs-Template** wählen — definiert Ziel-Emissionsfenster, Medium und die Gewichte der sechs Faktoren (`feasibility_weights.json`, benutzer-tunbar).
+3. **Bewerten** klicken — die Engine berechnet:
+   - **P(Erfolg)** als gewichtetes geometrisches Mittel aus sechs Faktoren (Emissionsfenster, Verspannung, Quanteneffizienz, Transduktion inkl. Selektivität, Stabilität, Bioconjugation) — ein disqualifizierender Faktor kann nicht kompensiert werden
+   - **Ampel-Verdikt** (grün ≥ 70 % / gelb / rot) mit Faktor-Balken und konkreten Verbesserungsvorschlägen pro schwachem Faktor
+   - **Monte-Carlo-Band** (N = 2000): Median und 5–95-%-Band über Materialparameter-Unsicherheiten, plus Varianzzerlegung (dominiert die Bandlücken-Unsicherheit das Risiko?)
+
+Die Validierung der Engine gegen die Literatur ist als Tests fixiert (`Phase4ValidationTests`): jedes Literatur-Design rangiert über seinem bekannten Fehlschlag, die Brus-Vorhersage trifft publizierte Emissionswellenlängen (Han 2001 CdSe-Serie, Xiang & Tang CdTe 650 nm) innerhalb ±20 %.
 
 ## 8. Bericht exportieren
 
