@@ -93,6 +93,26 @@ public class Phase4ValidationTests
     }
 
     [Fact]
+    public void Interferent_Lowers_Pb2plus_Feasibility()
+    {
+        // Faktor 4b: Hg2+ ist der klassische Stoeranalyt fuer Pb2+-Quenching
+        // (K_SV 1e6 vs 4.2e5). Der Engine-Abschlag muss P senken.
+        var design = ResolveTemplate("quenching-pb2plus");
+        double pClean = FeasibilityEngine.Evaluate(design).P;
+
+        design.Interferent = SensorDatabase.Analytes.First(a => a.AnalyteId == "Hg2+");
+        design.InterferentConcentration_M = 7.2e-8; // gleiche Konzentration wie das Ziel
+        double pInterfered = FeasibilityEngine.Evaluate(design).P;
+
+        Assert.True(pInterfered < pClean,
+            $"Hg2+-Interferenz muss P senken ({pInterfered:F2} vs {pClean:F2})");
+        // Und der Faktor-4-Score faellt sichtbar:
+        var f4Clean = FeasibilityEngine.Evaluate(ResolveTemplate("quenching-pb2plus"))
+            .Factors.First(f => f.Name == "Transduktion").Score;
+        Assert.True(f4Clean > 0.2, "Der Interferenz-Abschlag sollte von einer Basis > 0.2 ausgehen");
+    }
+
+    [Fact]
     public void Rank_Pb2plus_Literature_Above_BareCore()
     {
         // Literatur: CdSe/ZnS-MPA (Li 2013). Fehlschlag: nackter CdSe-Core mit

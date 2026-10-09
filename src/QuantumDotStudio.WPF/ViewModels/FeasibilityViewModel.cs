@@ -30,6 +30,36 @@ public class FeasibilityViewModel : INotifyPropertyChanged
 
     public List<ApplicationTemplate> Templates { get; } = new(TemplateDatabase.Templates);
 
+    /// <summary>Vorparameterisierte Literatur-Designs (Roadmap Phase 4).</summary>
+    public List<SensorTemplate> SensorTemplates { get; } = new(SensorTemplateDatabase.Templates);
+
+    private SensorTemplate? _selectedSensorTemplate;
+
+    /// <summary>Gewaehltes Literatur-Design oder null (freier Entwurf).</summary>
+    public SensorTemplate? SelectedSensorTemplate
+    {
+        get => _selectedSensorTemplate;
+        set
+        {
+            _selectedSensorTemplate = value;
+            if (value is not null)
+                ApplySensorTemplate(value);
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Uebernimmt ein Literatur-Design in die aktuellen Parameter.</summary>
+    private void ApplySensorTemplate(SensorTemplate t)
+    {
+        SelectedTemplate = Templates.FirstOrDefault(a => a.ApplicationId == t.ApplicationId) ?? Templates[0];
+        var ligand = SensorDatabase.Ligands.FirstOrDefault(l => l.LigandId == t.LigandId);
+        if (ligand is not null) SelectedLigand = ligand;
+        var analyte = SensorDatabase.Analytes.FirstOrDefault(a => a.AnalyteId == t.AnalyteId);
+        if (analyte is not null) SelectedAnalyte = analyte;
+        TargetConcentration_M = t.TargetConcentration_M;
+        ReceptorKd_M = t.ReceptorKd_M;
+    }
+
     public QuantumDot? Dot
     {
         get => _dot;

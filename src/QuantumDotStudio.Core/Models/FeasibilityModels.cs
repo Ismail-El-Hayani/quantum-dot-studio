@@ -47,6 +47,15 @@ public class SensorDesign
 
     public Ligand? Ligand { get; set; }
     public Analyte? Analyte { get; set; }
+
+    /// <summary>
+    /// Stoesrender Nebenanalyt (Roadmap 4, Faktor 4b): gesetzt, wenn ein
+    /// realistischer Interferent (z.B. Hg2+ fuer einen Pb2+-Quenching-Sensor)
+    /// mitbewertet werden soll. Null = Selektivitaet unbewertet.
+    /// </summary>
+    public Analyte? Interferent { get; set; }
+    /// <summary>Realistische Konzentration des Interferenten (M).</summary>
+    public double InterferentConcentration_M { get; set; }
     public ApplicationTemplate Application { get; set; } = new();
 
     /// <summary>Ziel-Konzentration des Analyten (M bzw. Aktivitaet).</summary>

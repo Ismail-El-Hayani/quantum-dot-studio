@@ -185,6 +185,12 @@
 
                         <!-- Anwendung + Bewertung auslösen -->
                         <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <TextBlock Text="Literatur-Design (Vorlage)" FontWeight="SemiBold" />
+                            <ComboBox ItemsSource="{Binding Feasibility.SensorTemplates}"
+                                     SelectedItem="{Binding Feasibility.SelectedSensorTemplate}"
+                                     DisplayMemberPath="DisplayName"
+                                     Margin="0,4,0,10" />
+
                             <TextBlock Text="Anwendungs-Template" FontWeight="SemiBold" />
                             <ComboBox ItemsSource="{Binding Feasibility.Templates}"
                                      SelectedItem="{Binding Feasibility.SelectedTemplate}"

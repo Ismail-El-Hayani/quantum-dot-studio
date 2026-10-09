@@ -115,9 +115,18 @@ public static class FeasibilityEngine
             : 0.0;
         double f3 = FeasibilityFactors.QuantumYieldProxy(hasShell, design.ShellThickness_nm, barrier, relaxed, graded);
 
-        // Faktor 4: Transduktion (Modus aus dem Analyten)
+        // Faktor 4: Transduktion (Modus aus dem Analyten) — mit Selektivitaets-
+        // Abschlag (Faktor 4b), wenn ein Interferent gesetzt ist.
         string mode = design.Analyte?.Mode ?? "";
         double f4 = FeasibilityFactors.TransductionScore(mode, design);
+        if (design.Interferent is not null && design.Analyte is not null)
+        {
+            double sel = SensorSelectivity.SelectivityFactor(
+                mode, design.Analyte, design.Interferent,
+                design.TargetConcentration_M,
+                design.InterferentConcentration_M > 0 ? design.InterferentConcentration_M : design.TargetConcentration_M);
+            f4 *= sel; // Interferenz schwaecht das nutzbare Signal
+        }
 
         // Faktor 5: Stabilitaet (Shell-CHEMIE zaehlt: Sulfid robust, Selenid schwach)
         double f5 = FeasibilityFactors.StabilityScore(design.Ligand, app.Medium, design.ShellMaterial);
