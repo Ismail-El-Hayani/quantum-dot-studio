@@ -29,6 +29,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         Simulation.PropertyChanged += OnSimulationPropertyChanged;
         Sensor.PropertyChanged += OnSensorPropertyChanged;
+        Feasibility.PropertyChanged += OnFeasibilityPropertyChanged;
     }
 
     public MainViewModel(SimulationViewModel simulation, SensorViewModel sensor, FeasibilityViewModel feasibility, ExportViewModel export)
@@ -43,6 +44,7 @@ public class MainViewModel : INotifyPropertyChanged
         Feasibility.Dot = Simulation.ActiveDot;
         Simulation.PropertyChanged += OnSimulationPropertyChanged;
         Sensor.PropertyChanged += OnSensorPropertyChanged;
+        Feasibility.PropertyChanged += OnFeasibilityPropertyChanged;
     }
 
     private void OnSimulationPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -71,6 +73,13 @@ public class MainViewModel : INotifyPropertyChanged
             Feasibility.DistanceUnboundExtra_nm = Sensor.DistanceUnboundExtra_nm;
         else if (e.PropertyName == nameof(SensorViewModel.DistanceBoundExtra_nm))
             Feasibility.DistanceBoundExtra_nm = Sensor.DistanceBoundExtra_nm;
+    }
+
+    private void OnFeasibilityPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // Neues Machbarkeits-Ergebnis -> in den LaTeX-Export fliessen lassen.
+        if (e.PropertyName == nameof(FeasibilityViewModel.Result))
+            Export.FeasibilityResult = Feasibility.Result;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -12,6 +12,7 @@
     <None Include="Data\materials.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Data\ligands.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Data\analytes.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Data\feasibility_weights.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

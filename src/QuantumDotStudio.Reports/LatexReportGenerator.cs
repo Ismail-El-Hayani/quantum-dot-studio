@@ -17,7 +17,7 @@ public static class LatexReportGenerator
     /// <param name="title">Titel des Berichts.</param>
     /// <param name="author">Autor des Berichts.</param>
     /// <returns>LaTeX-Quelltext als UTF-8 String.</returns>
-    public static string Generate(QuantumDot dot, string? screenshotPath = null, string title = "Quantum Dot Studio — Technischer Bericht", string author = "Quantum Dot Studio")
+    public static string Generate(QuantumDot dot, string? screenshotPath = null, string title = "Quantum Dot Studio — Technischer Bericht", string author = "Quantum Dot Studio", Core.Models.FeasibilityResult? feasibility = null)
     {
         ArgumentNullException.ThrowIfNull(dot);
         ArgumentNullException.ThrowIfNull(dot.Material);
@@ -55,6 +55,11 @@ public static class LatexReportGenerator
         if (dot is CoreShellQuantumDot cs)
         {
             AppendCoreShellSection(sb, cs);
+        }
+
+        if (feasibility is not null)
+        {
+            AppendFeasibilitySection(sb, feasibility);
         }
 
         if (!string.IsNullOrWhiteSpace(screenshotPath) && File.Exists(screenshotPath))
@@ -192,6 +197,72 @@ public static class LatexReportGenerator
         sb.AppendLine(@"\begin{center}");
         sb.AppendLine(@"\fcolorbox{black}{emissioncolor}{\parbox{0.4\textwidth}{\centering\vspace{1cm}Emissionsfarbe\vspace{1cm}}}");
         sb.AppendLine(@"\end{center}");
+        sb.AppendLine();
+    }
+
+    /// <summary>
+    /// Machbarkeits-Kapitel (Roadmap 3.3): Verdikt, Gesamtwahrscheinlichkeit,
+    /// Faktor-Tabelle mit Gewichten und Vorschlaegen, Monte-Carlo-Band und
+    /// Varianzzerlegung.
+    /// </summary>
+    private static void AppendFeasibilitySection(StringBuilder sb, FeasibilityResult feasibility)
+    {
+        sb.AppendLine(@"\section{Machbarkeit des Sensor-Entwurfs}");
+        string verdictWord = feasibility.Verdict switch
+        {
+            "green" => "machbar (grün)",
+            "amber" => "riskant (gelb)",
+            _ => "nicht empfohlen (rot)"
+        };
+        sb.AppendLine($@"Die Bewertung des Sensor-Entwurfs ergibt \textbf{{P(Erfolg) = {feasibility.P * 100:F0}\,\%}} — {verdictWord}.");
+        sb.AppendLine();
+        sb.AppendLine(@"\begin{table}[h]");
+        sb.AppendLine(@"\centering");
+        sb.AppendLine(@"\begin{tabular}{lrr}");
+        sb.AppendLine(@"\toprule");
+        sb.AppendLine(@"\textbf{Faktor} & \textbf{Gewicht} & \textbf{Score} \\");
+        sb.AppendLine(@"\midrule");
+        foreach (var f in feasibility.Factors)
+        {
+            sb.AppendLine($@"{Escape(f.Name)} & {f.Weight:P0} & {f.Score:P0} \\");
+        }
+        sb.AppendLine(@"\midrule");
+        sb.AppendLine($@"\textbf{{Geometrisches Mittel}} & \textbf{{100\,\%}} & \textbf{{{feasibility.P:P0}}} \\");
+        sb.AppendLine(@"\bottomrule");
+        sb.AppendLine(@"\end{tabular}");
+        sb.AppendLine(@"\caption{Machbarkeitsfaktoren des Sensor-Entwurfs (gewichtetes geometrisches Mittel; ein disqualifizierender Faktor kann nicht kompensiert werden).}");
+        sb.AppendLine(@"\end{table}");
+        sb.AppendLine();
+
+        var suggestions = feasibility.Factors.Where(f => !string.IsNullOrWhiteSpace(f.Suggestion)).ToList();
+        if (suggestions.Count > 0)
+        {
+            sb.AppendLine(@"\subsection{Empfehlungen}");
+            sb.AppendLine(@"\begin{itemize}");
+            foreach (var f in suggestions)
+            {
+                sb.AppendLine($@"\item \textbf{{{Escape(f.Name)}}}: {Escape(f.Suggestion)}");
+            }
+            sb.AppendLine(@"\end{itemize}");
+            sb.AppendLine();
+        }
+
+        if (feasibility.HasMonteCarlo)
+        {
+            sb.AppendLine(@"\subsection{Unsicherheit (Monte-Carlo, N = 2000)}");
+            sb.AppendLine($@"Materialparameter-Unsicherheiten ($\pm 0{{,}}05$\,eV Bandlücke, $\pm 10$\,\% Massen, $\pm 0{{,}}05$\,\AA{{}} Gitterkonstante) ergeben:");
+            sb.AppendLine(@"\begin{itemize}");
+            sb.AppendLine($@"\item Median: {feasibility.McMedian * 100:F0}\,\%");
+            sb.AppendLine($@"\item 5--95-\%-Band: {feasibility.McP05 * 100:F0}--{feasibility.McP95 * 100:F0}\,\%");
+            sb.AppendLine(@"\end{itemize}");
+            sb.AppendLine(@"\paragraph{Varianzzerlegung.} Der dominante Unsicherheitsbeitrag:");
+            sb.AppendLine(@"\begin{itemize}");
+            foreach (var v in feasibility.Decomposition)
+            {
+                sb.AppendLine($@"\item {Escape(v.Input)}: {v.Fraction:P0}");
+            }
+            sb.AppendLine(@"\end{itemize}");
+        }
         sb.AppendLine();
     }
 

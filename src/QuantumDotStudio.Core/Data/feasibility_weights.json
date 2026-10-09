@@ -1,0 +1,44 @@
+[
+  {
+    "ApplicationId": "bio-imaging-nir",
+    "DisplayName": "Bio-Imaging (NIR-I, 650–900 nm)",
+    "EmissionWindowMin_nm": 650,
+    "EmissionWindowMax_nm": 900,
+    "Medium": "aqueous",
+    "ConcentrationSpanDecades": 2,
+    "WeightEmissionWindow": 0.25,
+    "WeightStrain": 0.20,
+    "WeightQuantumYield": 0.20,
+    "WeightTransduction": 0.15,
+    "WeightStability": 0.10,
+    "WeightBioconjugation": 0.10
+  },
+  {
+    "ApplicationId": "visible-imaging",
+    "DisplayName": "Sichtbare Fluoreszenz (500–650 nm)",
+    "EmissionWindowMin_nm": 500,
+    "EmissionWindowMax_nm": 650,
+    "Medium": "aqueous",
+    "ConcentrationSpanDecades": 2,
+    "WeightEmissionWindow": 0.25,
+    "WeightStrain": 0.20,
+    "WeightQuantumYield": 0.20,
+    "WeightTransduction": 0.15,
+    "WeightStability": 0.10,
+    "WeightBioconjugation": 0.10
+  },
+  {
+    "ApplicationId": "heavy-metal-sensing",
+    "DisplayName": "Schwermetall-Sensor (Pb²⁺/Hg²⁺, sichtbar)",
+    "EmissionWindowMin_nm": 480,
+    "EmissionWindowMax_nm": 680,
+    "Medium": "aqueous",
+    "ConcentrationSpanDecades": 3,
+    "WeightEmissionWindow": 0.15,
+    "WeightStrain": 0.15,
+    "WeightQuantumYield": 0.15,
+    "WeightTransduction": 0.35,
+    "WeightStability": 0.15,
+    "WeightBioconjugation": 0.05
+  }
+]

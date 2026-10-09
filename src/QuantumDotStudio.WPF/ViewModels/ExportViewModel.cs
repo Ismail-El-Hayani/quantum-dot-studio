@@ -13,6 +13,7 @@ namespace QuantumDotStudio.WPF.ViewModels;
 public class ExportViewModel : INotifyPropertyChanged
 {
     private QuantumDot? _activeDot;
+    private FeasibilityResult? _feasibilityResult;
     private string? _lastExportPath;
     private string? _statusMessage;
     private bool _includeScreenshot;
@@ -44,6 +45,20 @@ public class ExportViewModel : INotifyPropertyChanged
     }
 
     public bool IsExportEnabled => ActiveDot != null;
+
+    /// <summary>
+    /// Letztes Machbarkeits-Ergebnis (optional). Ist es gesetzt, haengt der
+    /// LaTeX-Export das Machbarkeits-Kapitel an (Roadmap 3.3).
+    /// </summary>
+    public FeasibilityResult? FeasibilityResult
+    {
+        get => _feasibilityResult;
+        set
+        {
+            _feasibilityResult = value;
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>
     /// Wenn true, wird ein Screenshot der 3D-Ansicht im LaTeX-Bericht eingebettet.
@@ -136,7 +151,7 @@ public class ExportViewModel : INotifyPropertyChanged
             screenshotPath = ScreenshotProvider(targetPath);
         }
 
-        string latex = LatexReportGenerator.Generate(ActiveDot, screenshotPath);
+        string latex = LatexReportGenerator.Generate(ActiveDot, screenshotPath, feasibility: FeasibilityResult);
         File.WriteAllText(dialog.FileName, latex, System.Text.Encoding.UTF8);
         LastExportPath = dialog.FileName;
         StatusMessage = screenshotPath != null

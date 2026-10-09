@@ -28,32 +28,7 @@ public class FeasibilityViewModel : INotifyPropertyChanged
     private FeasibilityResult? _result;
     private bool _isRunning;
 
-    public List<ApplicationTemplate> Templates { get; } = new()
-    {
-        // AC-004-Pattern: diese Liste laesst sich durch Data/feasibility_weights.json
-        // erweitern (Phase 4); die Defaults decken die Roadmap-3.4-Szenarien ab.
-        new ApplicationTemplate
-        {
-            ApplicationId = "bio-imaging-nir",
-            DisplayName = "Bio-Imaging (NIR-I, 650–900 nm)",
-            EmissionWindowMin_nm = 650, EmissionWindowMax_nm = 900,
-            Medium = "aqueous"
-        },
-        new ApplicationTemplate
-        {
-            ApplicationId = "visible-imaging",
-            DisplayName = "Sichtbare Fluoreszenz (500–650 nm)",
-            EmissionWindowMin_nm = 500, EmissionWindowMax_nm = 650,
-            Medium = "aqueous"
-        },
-        new ApplicationTemplate
-        {
-            ApplicationId = "heavy-metal-sensing",
-            DisplayName = "Schwermetall-Sensor (Pb²⁺/Hg²⁺, sichtbar)",
-            EmissionWindowMin_nm = 480, EmissionWindowMax_nm = 680,
-            Medium = "aqueous"
-        }
-    };
+    public List<ApplicationTemplate> Templates { get; } = new(TemplateDatabase.Templates);
 
     public QuantumDot? Dot
     {
