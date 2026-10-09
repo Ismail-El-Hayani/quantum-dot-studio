@@ -106,10 +106,12 @@ public class SensorViewModelTests
     {
         var sim = new SimulationViewModel(new QuantumDotService());
         var sensor = new SensorViewModel();
+        var feasibility = new FeasibilityViewModel();
         var export = new ExportViewModel();
-        _ = new MainViewModel(sim, sensor, export);
+        _ = new MainViewModel(sim, sensor, feasibility, export);
 
         Assert.NotNull(sensor.Dot);
         Assert.Same(sim.ActiveDot, sensor.Dot);
+        Assert.Same(sim.ActiveDot, feasibility.Dot);
     }
 }

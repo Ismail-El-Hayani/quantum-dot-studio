@@ -176,6 +176,76 @@
                         </Grid>
                     </Grid>
                 </TabItem>
+                <TabItem Header="Machbarkeit">
+                    <Grid Margin="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="270" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Anwendung + Bewertung auslösen -->
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <TextBlock Text="Anwendungs-Template" FontWeight="SemiBold" />
+                            <ComboBox ItemsSource="{Binding Feasibility.Templates}"
+                                     SelectedItem="{Binding Feasibility.SelectedTemplate}"
+                                     DisplayMemberPath="DisplayName"
+                                     Margin="0,4,0,10" />
+
+                            <TextBlock Text="Rezeptor K_D (M, leer = Direktdetektion)" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding Feasibility.ReceptorKd_M, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Margin="0,4,0,10" />
+
+                            <Button Content="Machbarkeit bewerten" Padding="4"
+                                    Command="{Binding Feasibility.EvaluateCommand}" />
+                            <ProgressBar Visibility="{Binding Feasibility.IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                         IsIndeterminate="True" Height="6" Margin="0,6,0,0" />
+
+                            <TextBlock Text="Hinweis: Ligand, Analyt und Konzentration stammen aus dem Sensor-Tab."
+                                       TextWrapping="Wrap" FontSize="11" Foreground="Gray" Margin="0,12,0,0" />
+                        </StackPanel>
+
+                        <!-- Ergebnis: Verdikt, Balken, Monte Carlo -->
+                        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <Border Background="{Binding Feasibility.VerdictColor}" CornerRadius="4" Padding="10" Margin="0,0,0,10">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Feasibility.VerdictText}" Foreground="White" FontSize="16" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding Feasibility.ProbabilityText}" Foreground="White" FontSize="13" />
+                                        <TextBlock Text="{Binding Feasibility.MonteCarloText}" Foreground="White" FontSize="11"
+                                                   Visibility="{Binding Feasibility.HasMonteCarlo, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <ItemsControl ItemsSource="{Binding Feasibility.Result.Factors}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,4">
+                                                <TextBlock FontWeight="SemiBold">
+                                                    <Run Text="{Binding Name}" />
+                                                    <Run Text="{Binding Weight, StringFormat=' (Gewicht {0:P0})'}" Foreground="Gray" />
+                                                    <Run Text="{Binding ScorePercent, StringFormat=' — {0:F0} %'}" />
+                                                </TextBlock>
+                                                <ProgressBar Value="{Binding ScorePercent}" Maximum="100" Height="10" Margin="0,2,0,2" />
+                                                <TextBlock Text="{Binding Suggestion}" TextWrapping="Wrap" FontSize="11" Foreground="DarkRed" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <ItemsControl ItemsSource="{Binding Feasibility.Result.Decomposition}" Margin="0,12,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,2" Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Input}" Width="180" FontSize="11" />
+                                                <ProgressBar Value="{Binding FractionPercent}" Maximum="100" Height="8" Width="200" />
+                                                <TextBlock Text="{Binding FractionPercent, StringFormat=' {0:F0} %'}" FontSize="11" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </TabItem>
             </TabControl>
         </Grid>
     </Grid>
