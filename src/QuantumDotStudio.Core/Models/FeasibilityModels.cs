@@ -100,6 +100,9 @@ public class FeasibilityResult
 
     // Monte-Carlo (nur gesetzt, wenn EvaluateMonteCarlo gelaufen ist)
     public bool HasMonteCarlo { get; set; }
+
+    /// <summary>Anzahl der Monte-Carlo-Stichproben (nur informativ, 0 ohne MC).</summary>
+    public int McSampleCount { get; set; }
     public double McMedian { get; set; }
     public double McP05 { get; set; }
     public double McP95 { get; set; }

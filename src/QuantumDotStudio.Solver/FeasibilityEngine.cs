@@ -74,6 +74,7 @@ public static class FeasibilityEngine
             Verdict = baseResult.Verdict,
             Factors = baseResult.Factors,
             HasMonteCarlo = true,
+            McSampleCount = samples.Length,
             McMedian = Percentile(samples, 0.50),
             McP05 = Percentile(samples, 0.05),
             McP95 = Percentile(samples, 0.95)

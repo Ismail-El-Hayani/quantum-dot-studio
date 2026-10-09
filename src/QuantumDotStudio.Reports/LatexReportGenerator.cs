@@ -128,7 +128,7 @@ public static class LatexReportGenerator
         sb.AppendLine(@"\centering");
         sb.AppendLine(@"\begin{tabular}{lr}");
         sb.AppendLine(@"\toprule");
-        sb.AppendLine(@"\textbf{Parameter} & \textbf{Wert} \\\ ");
+        sb.AppendLine(@"\textbf{Parameter} & \textbf{Wert} \\");
         sb.AppendLine(@"\midrule");
         sb.AppendLine($"Material & {Escape(material.Name)} \\\\ ");
         sb.AppendLine($"Bulk-Bandlücke $E_g$ & {material.BandGap_eV:F3}\\,eV \\\\ ");
@@ -150,7 +150,7 @@ public static class LatexReportGenerator
         sb.AppendLine(@"\centering");
         sb.AppendLine(@"\begin{tabular}{lr}");
         sb.AppendLine(@"\toprule");
-        sb.AppendLine(@"\textbf{Größe} & \textbf{Wert} \\\ ");
+        sb.AppendLine(@"\textbf{Größe} & \textbf{Wert} \\\\");
         sb.AppendLine(@"\midrule");
         sb.AppendLine($"Radius $R$ & {dot.Radius_nm:F2}\\,nm \\\\ ");
         sb.AppendLine($"Anzahl Atome im Gitter & {dot.Atoms.Count} \\\\ ");
@@ -173,7 +173,7 @@ public static class LatexReportGenerator
         sb.AppendLine(@"\centering");
         sb.AppendLine(@"\begin{tabular}{cccr}");
         sb.AppendLine(@"\toprule");
-        sb.AppendLine(@"\textbf{Teilchen} & \textbf{Label} & \textbf{$(n,l)$} & \textbf{Energie (eV)} \\\ ");
+        sb.AppendLine(@"\textbf{Teilchen} & \textbf{Label} & \textbf{$(n,l)$} & \textbf{Energie (eV)} \\\\");
         sb.AppendLine(@"\midrule");
 
         foreach (var level in dot.EnergyLevels.OrderBy(e => e.Energy_eV))
@@ -224,10 +224,10 @@ public static class LatexReportGenerator
         sb.AppendLine(@"\midrule");
         foreach (var f in feasibility.Factors)
         {
-            sb.AppendLine($@"{Escape(f.Name)} & {f.Weight:P0} & {f.Score:P0} \\");
+            sb.AppendLine($@"{Escape(f.Name)} & {f.Weight * 100:F0}\,\% & {f.Score * 100:F0}\,\% \\");
         }
         sb.AppendLine(@"\midrule");
-        sb.AppendLine($@"\textbf{{Geometrisches Mittel}} & \textbf{{100\,\%}} & \textbf{{{feasibility.P:P0}}} \\");
+        sb.AppendLine($@"\textbf{{Geometrisches Mittel}} & \textbf{{100\,\%}} & \textbf{{{feasibility.P * 100:F0}\,\%}} \\");
         sb.AppendLine(@"\bottomrule");
         sb.AppendLine(@"\end{tabular}");
         sb.AppendLine(@"\caption{Machbarkeitsfaktoren des Sensor-Entwurfs (gewichtetes geometrisches Mittel; ein disqualifizierender Faktor kann nicht kompensiert werden).}");
@@ -249,7 +249,7 @@ public static class LatexReportGenerator
 
         if (feasibility.HasMonteCarlo)
         {
-            sb.AppendLine(@"\subsection{Unsicherheit (Monte-Carlo, N = 2000)}");
+            sb.AppendLine($@"\subsection{{Unsicherheit (Monte-Carlo, N = {feasibility.McSampleCount})}}");
             sb.AppendLine($@"Materialparameter-Unsicherheiten ($\pm 0{{,}}05$\,eV Bandlücke, $\pm 10$\,\% Massen, $\pm 0{{,}}05$\,\AA{{}} Gitterkonstante) ergeben:");
             sb.AppendLine(@"\begin{itemize}");
             sb.AppendLine($@"\item Median: {feasibility.McMedian * 100:F0}\,\%");
@@ -259,7 +259,7 @@ public static class LatexReportGenerator
             sb.AppendLine(@"\begin{itemize}");
             foreach (var v in feasibility.Decomposition)
             {
-                sb.AppendLine($@"\item {Escape(v.Input)}: {v.Fraction:P0}");
+                sb.AppendLine($@"\item {Escape(v.Input)}: {v.Fraction * 100:F0}\,\%");
             }
             sb.AppendLine(@"\end{itemize}");
         }
