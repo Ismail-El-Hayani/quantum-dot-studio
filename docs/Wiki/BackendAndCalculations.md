@@ -50,6 +50,7 @@ Stores bulk semiconductor parameters:
 | `DielectricConstant` | - | Relative permittivity ε_r |
 | `LatticeConstant_A` | Å | Zinc blende lattice constant |
 | `ElectronAffinity_eV` | eV | EA vs. vacuum — basis of the band alignment |
+| `VarshniAlpha_eV_per_K` / `VarshniBeta_K` | eV/K, K | Band-gap temperature coefficients (§3.8) |
 | `Cation` | - | Cation element symbol |
 | `Anion` | - | Anion element symbol |
 
@@ -82,6 +83,7 @@ Aggregates everything that belongs to one simulation step:
 | `Atoms` | Atom positions inside the spherical dot |
 | `ElectronCloud` | 1S electron probability cloud |
 | `ElectronCloud1P` | 1P cloud (n=1, l=1, m=0), lazily generated |
+| `Environment` | Environment the dot was computed with (§3.8) |
 
 ### `CoreShellQuantumDot : QuantumDot`
 
@@ -252,6 +254,35 @@ energy ordering `1S < 1P < 1D < 2S < 2P`, and the S-only shell case.
   Matthews–Blakeslee critical thickness `t_c ≈ b/(2|f|)` with Burgers vector
   `b ≈ 0.3 nm`. A shell thicker than `t_c` is flagged relaxed
   (`IsStrainRelaxed`); the band-profile plot marks `t_krit`.
+
+### 3.8 Environment model (Roadmap 2.3)
+
+```csharp
+EnvironmentModel.VarshniShift_eV / BandGapAtTemperature /
+                 EffectiveDielectric / PhWindowScore
+QuantumDotService.BuildQuantumDot(..., EnvironmentSettings? environment = null)
+QuantumDotService.BuildCoreShellQuantumDot(..., EnvironmentSettings? environment = null)
+```
+
+- **Temperature (Varshni):** `E_g(T) = E_g,ref − α·[T²/(T+β) − T_ref²/(T_ref+β)]`,
+  referenced to the 300 K value in `materials.json` — at reference temperature
+  the shift is exactly zero, so the standard environment reproduces the legacy
+  numbers bit-identically. CdSe: α = 4.4e-4 eV/K, β = 181 K (Varshni, Physica
+  34, 149 (1967)); measured anchor: CdSe/ZnS QD PL red-shifts ~0.022 eV over
+  300→373 K (Superlattices & Microstructures 46 (2009), QD α ≈ 2.07e-4).
+- **Solvent:** the Coulomb term is screened by the phenomenological blend
+  `ε_eff = (2·ε_dot + ε_sol)/3` (both carriers sit inside the dot → 2/3 weight).
+  Solvents live in `Data/solvents.json` (CRC Handbook values, 20–25 °C);
+  a solvent with `ε_r <= 0` is the "no correction" sentinel.
+- **pH:** each aqueous ligand carries a stability window
+  (`StabilityPhMin`/`StabilityPhMax`); `FeasibilityFactors.StabilityScore`
+  multiplies by `PhWindowScore` (1 inside, 0.25 outside, 1 when not applicable —
+  organic ligands have no window). The pH reaches the engine via
+  `SensorDesign.EnvironmentPh`.
+- The environment is part of the service cache key and stored on the dot
+  (`QuantumDot.Environment`); emission, spectrum anchor, sensor and feasibility
+  views all read the same object, so an environment change flows through the
+  entire pipeline on the next recalculation.
 
 ## 4. Lattice generation (`LatticeEngine`)
 
@@ -495,6 +526,11 @@ visible scaling.
   a strain-relief factor, not as a composition profile.
 - **Feasibility engine**: heuristic factor scores anchored to literature
   designs (not ab-initio); Monte Carlo priors are simple ± ranges.
+- **Solvent screening phenomenological**: `ε_eff = (2ε_dot + ε_sol)/3` — a
+  blending ansatz, not a full image-charge treatment (§3.8).
+- **Varshni parameters partly generic**: CdSe/CdS/InP carry cited sources;
+  PbS, ZnSe, CdTe and ZnS use generic II-VI estimates until verified
+  sources are added to `materials.json`.
 
 ## 12. Where to extend
 
@@ -503,7 +539,7 @@ visible scaling.
 | P/D states of the finite well | `FiniteWellSolver.cs`, `OpticalTransitions.cs` |
 | Ternary alloys (e.g. AgInS₂) | `Material.cs`, `materials.json`, `LatticeEngine.cs`, `AtomPalette.cs` |
 | Exciton corrections beyond leading order | `QuantumSolver.cs`, `OpticalTransitions.cs` |
-| Environment model (solvent ε_r, Varshni T-shift, pH window) | `SensorPhysics.cs`, `FeasibilityFactors.cs`, `Data/*.json` |
+| Verify Varshni constants per material (PbS, ZnSe, CdTe, ZnS — currently generic estimates) | `materials.json` + `EnvironmentModelTests` |
 | Response-time estimate (diffusion + kinetics) | `SensorPhysics.cs`, `SensorViewModel.cs` |
 | Real lineshape model | `PlotFactory.cs` |
 

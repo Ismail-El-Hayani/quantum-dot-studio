@@ -101,7 +101,7 @@ within 10 % of literature, recalc at 10 nm < 200 ms, all tests green in CI.
 
 ---
 
-## 2. Phase 2 — Sensor physics modes — ✅ complete (`38d38ba`, `29683c0`)
+## 2. Phase 2 — Sensor physics modes — ✅ complete (`38d38ba`, `29683c0`, incl. 2.3)
 
 The app learns what a sensor *is*: a QD whose optical response changes
 predictably in the presence of an analyte.
@@ -152,6 +152,18 @@ must differ by ≳ 1 nm to produce a resolvable ratiometric signal.
 
 Solvent dielectric (screens Coulomb term), temperature (Varshni band-gap shift),
 pH window (ligand stability). Feeds both the physics and the feasibility scores.
+
+**Delivered** (post-roadmap chunk, 2026-10): `Core/Physics/EnvironmentModel`
+(Varshni referenced to the 300 K `materials.json` gap — standard environment is
+bit-identical to the legacy path), `Data/solvents.json` + `SolventDatabase`
+(CRC Handbook dielectrics), ligand stability windows
+(`StabilityPhMin/Max`, `PhWindowScore` × factor 5 in the feasibility engine via
+`SensorDesign.EnvironmentPh`), environment-aware `QuantumDotService` with the
+environment in the cache key, and the „Umgebung“ expander in the UI
+(solvent, 250–450 K, pH). CdSe Varshni: α = 4.4e-4 eV/K, β = 181 K (Varshni
+1967), cross-checked against the measured CdSe/ZnS 300→373 K red-shift
+(~0.022 eV, Superlattices & Microstructures 46 (2009)). 12 new tests
+(`EnvironmentModelTests`).
 
 **Exit criteria:** a CdSe/ZnS–MPA–fluorescein FRET pair can be configured and
 its ratiometric response plotted; quenching calibration curve matches

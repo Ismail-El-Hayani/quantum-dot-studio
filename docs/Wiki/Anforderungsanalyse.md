@@ -10,6 +10,7 @@ Der Benutzer kann den Nanokristall-Radius R über einen Slider im Bereich 1 nm �
 
 ### FR-003: Quantenmechanische Berechnung
 Das System berechnet für den gewählten Radius die Energieniveaus E_n,l des Elektrons und Lochs im unendlichen sphärischen Potentialtopf (analytische Lösung der radialen Schrödinger-Gleichung). Die Bandlücke des Quantum-Dots ergibt sich aus der vollen Brus-Gleichung: E_g + ΔE_e + ΔE_h − 1,786 e²/(4πε₀εᵣR).
+Erweiterung (Umgebungsmodell): Optional berücksichtigt die Berechnung Umgebungseffekte — Temperatur (Varshni-Bandlückenverschiebung, auf die 300-K-Referenz verankert), Solvens (dielektrische Abschirmung des Coulomb-Terms) und pH (Liganden-Stabilitätsfenster, ausgewertet in der Machbarkeits-Engine). Die Standardumgebung (300 K, kein Solvens) liefert exakt die bisherigen Werte.
 
 ### FR-004: 3D-Atomstruktur
 Das System generiert ein sphärisches Ausschnitt aus einem kubisch-flächenzentrierten Zinkblende-Gitter und stellt die Atompositionen (Kationen und Anionen) als farbige Kugeln in 3D dar. Die Anzahl der Atome skaliert mit dem Radius.

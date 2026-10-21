@@ -25,6 +25,11 @@ is to actually work.
 - Selection-rule optical spectrum: allowed transitions (Δn = Δl = 0) with
   degeneracy-based oscillator strengths (1S : 1P : 1D = 1 : 3 : 5) — absorption
   series plus the 1S emission line, anchored exactly to the Brus gap.
+- Environment model: temperature shifts the band gap via Varshni's equation
+  (referenced to 300 K — the standard environment reproduces the legacy
+  numbers exactly), solvents screen the Coulomb term
+  (ε_eff = (2·ε_dot + ε_sol)/3, CRC Handbook dielectrics), and the pH checks
+  each ligand's stability window inside the feasibility engine.
 
 ![Spectrum](docs/screenshots/plot-spectrum.png)
 

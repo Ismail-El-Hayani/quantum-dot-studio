@@ -28,6 +28,11 @@ Das Fenster ist in zwei Bereiche aufgeteilt:
    - Werte außerhalb des Bereichs werden rot markiert und mit einer Fehlermeldung abgewiesen.
 3. **Berechnen**: Klicken Sie auf **Berechnen**, um die Simulation neu zu starten.
    - Änderungen an Material oder Radius lösen automatisch eine Neuberechnung aus.
+4. **Umgebung** (optional, aufklappbar): Wählen Sie ein Solvens (dielektrische
+   Abschirmung des Coulomb-Terms), stellen Sie die Temperatur (250–450 K,
+   Varshni-Bandlückenverschiebung) und den pH-Wert ein. Letzterer fließt in die
+   Machbarkeits-Engine ein (Liganden-Stabilitätsfenster). Standardumgebung
+   (300 K, kein Solvens): exakt die bisherigen Werte.
 
 > Hinweis für Fortgeschrittene: Die Materialliste stammt aus `Data/materials.json`.
 > Sie können dort weitere Halbleiter (z. B. ZnS oder CdTe) ergänzen, ohne den
