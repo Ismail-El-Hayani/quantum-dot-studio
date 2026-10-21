@@ -1,5 +1,6 @@
 using QuantumDotStudio.Core.Data;
 using QuantumDotStudio.Core.Models;
+using QuantumDotStudio.Core.Physics;
 
 namespace QuantumDotStudio.Solver;
 
@@ -64,6 +65,10 @@ public class QuantumDotService
             level.Particle = Particle.Hole;
 
         dot.EnergyLevels = electronLevels.Concat(holeLevels).OrderBy(e => e.Energy_eV).ToList();
+
+        // Optische Übergänge (Auswahlregel Δn = Δl = 0) für das Spektrum.
+        dot.OpticalTransitions = OpticalTransitions.Compute(
+            material.BandGap_eV, dot.TotalBandGap_eV, dot.EnergyLevels);
 
         // Gitter (für spätere Visualisierung)
         dot.Atoms = _lattice.GenerateZincBlende(
@@ -194,6 +199,11 @@ public class QuantumDotService
 
         // Coulomb: Core-Dielektrikum, Radius = Core-Radius (Emissionsvolumen).
         dot.CoulombEnergy_eV = QuantumSolver.CoulombEnergy(coreRadius_nm, core.DielectricConstant);
+
+        // Optische Übergänge aus den gebundenen Zuständen des endlichen Topfs
+        // (nur S-Zustände, daher reine S-Übergänge 1S→1S, 2S→2S, 3S→3S).
+        dot.OpticalTransitions = OpticalTransitions.Compute(
+            core.BandGap_eV, dot.TotalBandGap_eV, dot.EnergyLevels);
 
         // Gitter: Core/Shell-Ausschnitt mit korrekten Elementen je Region.
         dot.Atoms = shellThickness_nm > 0

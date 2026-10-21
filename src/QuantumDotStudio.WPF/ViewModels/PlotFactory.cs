@@ -160,13 +160,17 @@ public static class PlotFactory
     }
 
     /// <summary>
-    /// Emissionsspektrum: Gauß-Peak bei der Bandlücken-Energie.
+    /// Absorptions- und Emissionsspektrum: Übergänge mit Auswahlregel
+    /// Δn = Δl = 0 und relativen Oszillatorstärken (Absorption, blau) sowie
+    /// die Photolumineszenz aus dem 1S-Grundzustand (Emission, grün).
+    /// Ohne Übergänge (z. B. keine gebundenen Zustände) bleibt die reine
+    /// Emissionslinie mit Peak-Markierung.
     /// </summary>
     public static PlotModel CreateSpectrumPlot(QuantumDot dot)
     {
         var model = new PlotModel
         {
-            Title = "Emissionsspektrum",
+            Title = "Absorption & Emission",
             Background = OxyColors.White
         };
 
@@ -177,21 +181,51 @@ public static class PlotFactory
             return model;
 
         double center = dot.EmissionWavelength_nm;
-        double sigma = center * 0.02; // 2 % FWHM-artige Breite
-        var series = new LineSeries
+
+        var transitions = dot.OpticalTransitions
+            .Where(t => t.Energy_eV > 0 && t.Wavelength_nm > 0 && !double.IsInfinity(t.Wavelength_nm))
+            .ToList();
+
+        // Absorption: Summe der Gauß-verbreiterten Übergänge, Höhe ~ Oszillatorstärke.
+        if (transitions.Count > 0)
         {
-            Title = "Emission",
+            double lambdaMin = Math.Min(transitions.Min(t => t.Wavelength_nm), center) * 0.85;
+            double lambdaMax = center * 1.15;
+            var absorption = new LineSeries
+            {
+                Title = "Absorption (Δn = Δl = 0)",
+                Color = OxyColors.DodgerBlue,
+                StrokeThickness = 2
+            };
+            double step = (lambdaMax - lambdaMin) / 400.0;
+            for (double lambda = lambdaMin; lambda <= lambdaMax; lambda += step)
+            {
+                double intensity = 0.0;
+                foreach (var t in transitions)
+                {
+                    double sigma = t.Wavelength_nm * 0.02; // phänomenologische Verbreiterung (Größendispersion)
+                    intensity += t.RelativeStrength * Math.Exp(-0.5 * Math.Pow((lambda - t.Wavelength_nm) / sigma, 2));
+                }
+                absorption.Points.Add(new DataPoint(lambda, intensity));
+            }
+            model.Series.Add(absorption);
+        }
+
+        // Emission: 1S-Grundzustand (Relaxation vor der Rekombination).
+        double sigmaE = center * 0.02;
+        var emission = new LineSeries
+        {
+            Title = "Emission (1S)",
             Color = OxyColors.ForestGreen,
             StrokeThickness = 2
         };
 
         for (double lambda = center * 0.7; lambda <= center * 1.3; lambda += center * 0.005)
         {
-            double intensity = Math.Exp(-0.5 * Math.Pow((lambda - center) / sigma, 2));
-            series.Points.Add(new DataPoint(lambda, intensity));
+            double intensity = Math.Exp(-0.5 * Math.Pow((lambda - center) / sigmaE, 2));
+            emission.Points.Add(new DataPoint(lambda, intensity));
         }
-
-        model.Series.Add(series);
+        model.Series.Add(emission);
 
         // Vertikale Linie für Peakposition
         var peakAnnotation = new LineAnnotation
@@ -203,6 +237,8 @@ public static class PlotFactory
             Text = $"{center:F1} nm"
         };
         model.Annotations.Add(peakAnnotation);
+
+        model.Legends.Add(new Legend { LegendPosition = LegendPosition.TopRight, LegendFontSize = 9 });
 
         return model;
     }

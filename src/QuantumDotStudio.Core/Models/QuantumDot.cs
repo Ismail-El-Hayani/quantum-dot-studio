@@ -48,6 +48,13 @@ public class QuantumDot
     public List<EnergyLevel> EnergyLevels { get; set; } = new();
 
     /// <summary>
+    /// Optische Übergänge (Auswahlregel Δn = Δl = 0) aus den gebundenen
+    /// Elektron- und Loch-Niveaus, aufsteigend nach Energie. Der
+    /// 1S-Grundzustandsübergang ist auf die effektive Bandlücke verankert.
+    /// </summary>
+    public List<Physics.OpticalTransition> OpticalTransitions { get; set; } = new();
+
+    /// <summary>
     /// Elektronen-Wahrscheinlichkeitsdichte-Wolke (Position in nm, normierte |ψ|²).
     /// </summary>
     public List<(System.Numerics.Vector3 Position, float Probability)> ElectronCloud { get; set; } = new();
