@@ -1,33 +1,39 @@
 # Quantum Dot Studio — Backend and Calculations
 
-This document explains how the backend of Quantum Dot Studio works: the data flow from a user-selected material and radius to the final 3D model, plots, and LaTeX report. It is meant as a reference for extending the project, e.g. with ternary materials or core/shell structures.
+This document explains how the backend of Quantum Dot Studio works: the data flow from a user-selected material and radius to the final 3D model, plots, and LaTeX report. It is meant as a reference for extending the project, e.g. with more transduction modes or a full environment model.
 
 ## 1. Overview
 
 The application follows a small MVVM pipeline:
 
 ```
-User input (Material + Radius + options)
+User input (Material + Radius + Shell options)
           |
           v
-SimulationViewModel
+SimulationViewModel.RecalculateAsync   (background thread, staleness-guarded)
           |
           v
-QuantumDotService.BuildQuantumDot(Material, radius)
+QuantumDotService.BuildQuantumDot / BuildCoreShellQuantumDot
           |
-          +--> QuantumSolver       (energies, band gap, wavelength)
-          +--> LatticeEngine       (zinc blende atom positions)
-          +--> ProbabilityCloudGenerator (electron ground-state cloud)
+          +--> QuantumSolver           (confinement, Brus gap, wavelength, levels)
+          +--> FiniteWellSolver       (core/shell bound S-states, l = 0)
+          +--> BandAlignment          (electron/hole barriers from affinities)
+          +--> StrainModel            (lattice mismatch, critical thickness)
+          +--> OpticalTransitions     (selection-rule absorption spectrum)
+          +--> LatticeEngine          (zinc blende atom positions)
+          +--> ProbabilityCloudGenerator (1S cloud; 1P on demand)
           |
           v
 QuantumDot (aggregate data object)
           |
-          +--> QuantumDotRenderer3D  (Helix-Toolkit 3D model)
-          +--> PlotFactory            (OxyPlot energy/spectrum charts)
+          +--> QuantumDotRenderer3D   (merged-mesh Helix model, frozen, background-built)
+          +--> PlotFactory            (OxyPlot: levels, spectrum, band profile, sensor responses)
           +--> LatexReportGenerator   (report source)
 ```
 
-`QuantumDot` is the central DTO. Once it is built, the 3D view, plots, stats text, legend, and export all read from the same object.
+`QuantumDot` is the central DTO. Once it is built, the 3D view, plots, stats text,
+legend, and export all read from the same object. All heavy work (physics, mesh
+build) runs on `Task.Run`; the UI thread only assigns the finished, frozen model.
 
 ## 2. Data models
 
@@ -43,16 +49,20 @@ Stores bulk semiconductor parameters:
 | `EffectiveMassHole` | `m_e` | Hole effective mass |
 | `DielectricConstant` | - | Relative permittivity ε_r |
 | `LatticeConstant_A` | Å | Zinc blende lattice constant |
+| `ElectronAffinity_eV` | eV | EA vs. vacuum — basis of the band alignment |
 | `Cation` | - | Cation element symbol |
 | `Anion` | - | Anion element symbol |
 
-Currently every material is treated as a binary zinc blende compound. Ternary/alloy materials would extend this model, see Section 12.
+Every material is treated as a binary zinc blende compound. Ternary/alloy
+materials would extend this model, see Section 12.
 
 Materials live in `src/QuantumDotStudio.Core/Data/materials.json` and are loaded
 once on first access (`MaterialDatabase.Defaults`, thread-safe via `Lazy`). The
 file is copied to the output directory at build time; adding an entry there adds
 a material to the application without any code change. A built-in fallback list
-(CdSe, InP, PbS) is used only if no valid JSON file is found.
+(CdSe, InP, PbS) is used only if no valid JSON file is found. The same
+JSON-plus-compiled-fallback pattern is used for the ligand, analyte, sensor
+template, and feasibility-weight databases (`Data/*.json`).
 
 ### `QuantumDot`
 
@@ -61,14 +71,29 @@ Aggregates everything that belongs to one simulation step:
 | Property | Meaning |
 |---|---|
 | `Material` | Selected material |
-| `Radius_nm` | Dot radius in nm |
+| `Radius_nm` | Dot radius in nm (core + shell for heterostructures) |
 | `ConfinementEnergyElectron_eV` | Electron confinement energy |
 | `ConfinementEnergyHole_eV` | Hole confinement energy |
+| `CoulombEnergy_eV` | Leading-order Coulomb term (negative) |
 | `TotalBandGap_eV` | Effective QD band gap |
 | `EmissionWavelength_nm` | Emission wavelength from the band gap |
 | `EnergyLevels` | List of electron and hole levels |
+| `OpticalTransitions` | Selection-rule transitions, ascending in energy (§3.6) |
 | `Atoms` | Atom positions inside the spherical dot |
 | `ElectronCloud` | 1S electron probability cloud |
+| `ElectronCloud1P` | 1P cloud (n=1, l=1, m=0), lazily generated |
+
+### `CoreShellQuantumDot : QuantumDot`
+
+| Property | Meaning |
+|---|---|
+| `ShellMaterial` | Shell semiconductor |
+| `CoreRadius_nm` | Radius of the core (emission volume) |
+| `ShellThickness_nm` | Shell thickness in nm (0..5) |
+| `ElectronBarrier_eV` / `HoleBarrier_eV` | Band offsets from `BandAlignment` |
+| `LatticeMismatch_f` | `f = (a_shell − a_core) / a_core` |
+| `CriticalThickness_nm` | Matthews–Blakeslee estimate |
+| `IsStrainRelaxed` | True if the shell exceeds the critical thickness |
 
 ### `Atom`
 
@@ -86,10 +111,14 @@ Aggregates everything that belongs to one simulation step:
 | `AngularMomentum_l` | Angular momentum quantum number |
 | `Energy_eV` | Calculated energy |
 | `Label` | Spectroscopic label, e.g. `1S`, `1P`, `2S` |
+| `Particle` | `Electron` or `Hole` (labels stay prefix-free) |
 
 ## 3. The solver (`QuantumSolver`)
 
-All calculations use the **infinite spherical quantum well** model with effective mass approximation and the **full Brus equation** including the leading-order Coulomb term.
+Bare dots use the **infinite spherical quantum well** model with effective mass
+approximation and the **full Brus equation** including the leading-order Coulomb
+term. Core/shell dots replace the radial confinement with the **finite well**
+(§3.7).
 
 ### 3.1 Confinement energy
 
@@ -175,6 +204,55 @@ QuantumSolver.CalculateEnergyLevels(double R_nm, double mStar, int maxN, int max
 
 Builds all `(n,l)` combinations up to `maxN` and `maxL`, labels them with spectroscopic notation (`1S`, `1P`, `2S`, ...), and sorts by energy. Each level carries a `Particle` property (`Electron` or `Hole`) set by `QuantumDotService`; the label itself stays prefix-free.
 
+### 3.6 Optical transitions
+
+```csharp
+OpticalTransitions.Compute(double bulkBandGap_eV, double effectiveBandGap_eV,
+                           IEnumerable<EnergyLevel> levels, int maxTransitions = 5)
+```
+
+Pure functions in `Core/Physics/OpticalTransitions.cs` (namespace
+`QuantumDotStudio.Core.Physics`). Strong-confinement model for the absorption
+spectrum:
+
+- **Selection rule Δn = Δl = 0.** Electron and hole envelope functions live in
+  the same spherical well and are orthogonal — only states with identical
+  `(n,l)` overlap. Transition energy: `E(n,l) = E_g + E_e(n,l) + E_h(n,l)`.
+- **Ground state anchored.** The 1S→1S transition is set to the effective band
+  gap of the model (`QuantumDot.TotalBandGap_eV`, which carries the Brus Coulomb
+  term), so the emission line is identical with the Brus result.
+- **Relative oscillator strength** `f ∝ (2l+1)` — degeneracy over the magnetic
+  quantum number: `1S : 1P : 1D = 1 : 3 : 5` (overlap = 1 for identical
+  quantum numbers).
+- **Core/shell dots:** `FiniteWellSolver` provides only S-states, so shell-mode
+  spectra contain pure S-transitions (`1S→1S`, `2S→2S`, `3S→3S`) computed from
+  the finite-well energies.
+- Wavelengths use the same `h·c/e` constant chain as
+  `WavelengthFromBandGap`, keeping transition and emission wavelengths
+  consistent to the last digit.
+
+The result is stored on the model (`QuantumDot.OpticalTransitions`) by
+`QuantumDotService` and consumed by the spectrum plot (§8.2). Tests
+(`OpticalTransitionsTests`) pin the anchor identity, the degeneracy ratios, the
+energy ordering `1S < 1P < 1D < 2S < 2P`, and the S-only shell case.
+
+### 3.7 Core/shell stack (finite well, band alignment, strain)
+
+- **`BandAlignment`** — electron/hole barriers at the core/shell interface from
+  the electron affinities: `V0_e = EA_core − EA_shell` (positive = confinement
+  in the core); the sum rule `V0_e + V0_h = E_g,shell − E_g,core` is unit-tested.
+- **`FiniteWellSolver`** — bound S-states (`l = 0`) of the finite spherical
+  well, matching condition `k·cot(kR) = −κ` with `k = √(2m*E)/ħ`,
+  `κ = √(2m*(V0−E))/ħ`. The n-th state lies in exactly one interval
+  `kR ∈ ((n−1)π, nπ)` where the condition is strictly monotonic — one bisection
+  per state. Binding threshold (3D): a state exists only for
+  `V0 > ħ²/(2m*R²)`. A too-shallow barrier or a type-II alignment yields no
+  bound states; the effective gap then falls back to the bulk core value.
+- **`StrainModel`** — lattice mismatch `f = (a_shell − a_core)/a_core` and the
+  Matthews–Blakeslee critical thickness `t_c ≈ b/(2|f|)` with Burgers vector
+  `b ≈ 0.3 nm`. A shell thicker than `t_c` is flagged relaxed
+  (`IsStrainRelaxed`); the band-profile plot marks `t_krit`.
+
 ## 4. Lattice generation (`LatticeEngine`)
 
 Builds a spherical zinc blende atom cut-out from the selected material.
@@ -185,6 +263,15 @@ LatticeEngine.GenerateZincBlende(
     double radius_nm,
     string cation,
     string anion)
+```
+
+For core/shell dots:
+
+```csharp
+LatticeEngine.GenerateZincBlendeCoreShell(
+    double coreLatticeConstant_A, double coreRadius_nm, double shellThickness_nm,
+    string coreCation, string coreAnion,
+    string shellCation, string shellAnion)
 ```
 
 ### 4.1 Zinc blende basis
@@ -203,12 +290,15 @@ For each integer lattice cell `(ix, iy, iz)`:
   - `(0.75, 0.25, 0.75)`
   - `(0.75, 0.75, 0.25)`
 
-Each atom position is checked against the requested sphere radius. Atoms inside are kept, with default visual radii:
+Each atom position is checked against the requested sphere radius (core radius
+inside the core region, core + shell thickness in the shell). Atoms inside are
+kept, with default visual radii:
 
 - Cation: `0.12 nm`
 - Anion: `0.14 nm`
 
-The number of atoms grows roughly as `r³` (e.g. ~4 000 atoms for CdSe at 3 nm, ~11 000 at 5 nm).
+The number of atoms grows roughly as `r³` (e.g. ~4 000 atoms for CdSe at 3 nm,
+~151 000 at 10 nm — the case the renderer benchmark uses).
 
 ## 5. Electron probability cloud (`ProbabilityCloudGenerator`)
 
@@ -216,6 +306,7 @@ Approximates the 1S electron ground state in the infinite spherical well.
 
 ```csharp
 ProbabilityCloudGenerator.GenerateElectronCloud1S(double radius_nm)
+ProbabilityCloudGenerator.GenerateElectronCloud1P(double radius_nm)
 ```
 
 ### 5.1 Wave function
@@ -228,6 +319,10 @@ For `l = 0`, `n = 1`:
 |ψ|² ∝ (sin(π·r/R) / r)²
 ```
 
+The 1P cloud (`n = 1, l = 1, m = 0`) is the radial `j₁` function times
+`cos²θ` — a dumbbell along z with a node at the origin and at the equatorial
+plane, peak at `r ≈ 0.65·R`.
+
 ### 5.2 Grid sampling
 
 - `GridResolution = 40` → `40³ = 64 000` grid points inside the bounding cube.
@@ -235,28 +330,39 @@ For `l = 0`, `n = 1`:
   1. Find maximum `|ψ|²` for normalization.
   2. Yield points where normalized `|ψ|² >= ProbabilityThreshold = 0.05`.
 
-This produces thousands of cloud points. They are later rendered as small transparent spheres.
+This produces thousands of cloud points, rendered as merged semi-transparent
+meshes (§7.3). The 1P cloud is generated lazily
+(`QuantumDotService.EnsureElectronCloud1P`) because the second 64k-point pass
+is noticeable — it is only computed when the 1P checkbox is first enabled.
 
 ## 6. Service orchestration (`QuantumDotService`)
 
 ```csharp
 QuantumDotService.BuildQuantumDot(Material material, double radius_nm, int maxLevels = 6)
+QuantumDotService.BuildCoreShellQuantumDot(Material core, Material shell,
+    double coreRadius_nm, double shellThickness_nm, int maxStates = 3)
 ```
 
-What it does:
+What the bare-dot build does:
 1. Checks the cache for `(material.Name, radius_nm)`.
 2. Creates a fresh `QuantumDot`.
-3. Calls `QuantumSolver` for energies, band gap, and wavelength.
-4. Calls `LatticeEngine` for atoms.
-5. Calls `ProbabilityCloudGenerator` for the cloud.
+3. Calls `QuantumSolver` for energies, Brus gap, wavelength, and the level series.
+4. Computes the optical transitions (§3.6) from the levels.
+5. Calls `LatticeEngine` for atoms and `ProbabilityCloudGenerator` for the cloud.
 6. Stores the result in the cache and returns it.
 
-The cache avoids recomputation when the same material/radius combination is requested again.
+The core/shell build adds band alignment, finite-well S-states, strain analysis,
+and the core/shell lattice; the radius slider doubles as the core radius in
+shell mode. The cache avoids recomputation for repeated material/radius pairs;
+it is locked on read AND write so concurrent background recalculations cannot
+race. `EnsureElectronCloud1P(dot)` adds the 1P cloud on demand;
+`ClearCache()` empties the cache when material data change at runtime.
 
 ## 7. Rendering (`QuantumDotRenderer3D`)
 
 ```csharp
-QuantumDotRenderer3D.BuildModel(QuantumDot dot, bool showLattice, bool showCloud)
+QuantumDotRenderer3D.BuildModel(QuantumDot dot,
+    bool showLattice = true, bool showCloud = true, bool showCloud1P = false)
 ```
 
 ### 7.1 Scaling
@@ -267,20 +373,33 @@ QuantumDotRenderer3D.BuildModel(QuantumDot dot, bool showLattice, bool showCloud
 
 The model is centered by subtracting the atom/electron-cloud centroid.
 
-### 7.2 Atom rendering
+### 7.2 Atom rendering (merged meshes)
 
-For each atom:
-1. Translate position by `-centroid` and multiply by `visualScale`.
-2. Look up color from `AtomPalette` by element symbol.
-3. Build a sphere mesh with `MeshBuilder.AddSphere`.
-4. Convert to WPF `MeshGeometry3D`.
-5. Add a `GeometryModel3D` with that mesh and material to the `Model3DGroup`.
+All atoms of one element are merged into a single mesh: one `MeshBuilder` per
+element, producing exactly one `GeometryModel3D` per element instead of one per
+atom. A 10 nm CdSe dot (~151 000 atoms) renders as 2 children where the
+per-atom approach created ~151 000.
 
-This is currently one mesh + one material per atom. It is accurate but not performant for thousands of atoms.
+Tiered level of detail (construction cost, benchmark-verified):
+
+- `> 10 000` atoms: sphere tessellation reduced to `(6, 5)`.
+- `> 40 000` atoms: tessellation `(4, 3)` and boxes instead of spheres
+  (individually sub-pixel objects at that size).
+
+Texture coordinates are not generated (solid-color brushes), collections are
+presized, and the finished `Model3DGroup` is `Freeze()`d so the whole scene can
+be built on a background thread and handed to the UI frozen.
+
+Benchmark (`QuantumDotStudio.Bench`, median of 5 runs, 10 nm CdSe):
+legacy per-atom construction ~13 s on the UI thread (extrapolated) vs.
+~1.1 s merged and in the background.
 
 ### 7.3 Cloud rendering
 
-All surviving cloud points are merged into a single `GeometryModel3D` mesh with a semi-transparent Dodger-Blue material (`A=120`). Each point is a small sphere whose radius scales with local probability.
+All surviving cloud points are merged into a single `GeometryModel3D` mesh per
+cloud (`BuildCloudMesh(color)`): the 1S cloud is a semi-transparent Dodger-Blue
+overlay, the 1P cloud a dark-red overlay. Each point is a small sphere whose
+radius scales with local probability.
 
 ### 7.4 Color palette (`AtomPalette`)
 
@@ -294,6 +413,7 @@ Known element colors:
 | P | Yellow |
 | Pb | Steel blue-gray |
 | S | Neon yellow |
+| Zn | Cool light gray |
 
 Unknown elements fall back to light gray.
 
@@ -305,7 +425,31 @@ Horizontal bar chart showing the first 12 electron/hole levels. Labels are group
 
 ### 8.2 Spectrum plot
 
-A Gaussian line around `EmissionWavelength_nm` with a width of `2 %` of the center. A dashed red vertical line marks the peak.
+Absorption (blue) and emission (green) in one model:
+
+- The **absorption series** is the sum of Gaussian-broadened optical transitions
+  (§3.6), each peak weighted by its relative oscillator strength.
+- The **emission series** is the 1S photoluminescence line at
+  `EmissionWavelength_nm` (radiative recombination after relaxation into the
+  ground state).
+- Broadening is phenomenological: 2 % of each transition's wavelength — a
+  stand-in for size dispersion, not a lineshape model.
+- A dashed red vertical line marks the emission peak.
+
+Without transitions (e.g. a type-II-like alignment without bound states) the
+plot falls back to the pure emission line.
+
+### 8.3 Band profile plot
+
+Radial conduction/valence band edges of a core/shell dot with barrier jumps at
+the interface, the bound S-states as dashed lines, and a red `t_krit` marker
+when the shell exceeds the critical thickness. Bare dots get a flat profile.
+
+### 8.4 Sensor response plots
+
+One response curve per transduction mode: FRET `E(r)` with bound/unbound
+markers, Stern–Volmer log calibration with LOD and current concentration,
+Nernst `ψ(pH)`, PET quench fraction vs. `E₀` with the CB edge.
 
 ## 9. Report generation (`LatexReportGenerator`)
 
@@ -316,41 +460,52 @@ Produces a `.tex` document containing:
 4. Quantum-dot results table.
 5. Energy-level table.
 6. Spectrum section with an emission-color box.
-7. Optional embedded 3D screenshot (PNG) or placeholder.
+7. Optional core/shell chapter (heterostructures only).
+8. Optional feasibility chapter (factor table, Monte Carlo band) when a
+   feasibility result is passed in.
+9. Optional embedded 3D screenshot (PNG) or placeholder.
 
-The emission color is computed from wavelength with a simple visible-spectrum RGB approximation (`WavelengthToRgb`).
+The emission color is computed from wavelength with a simple visible-spectrum RGB approximation (`WavelengthToRgb`). Generated reports are compile-verified with pdflatex.
 
 ## 10. WPF binding
 
-The 3D view is no longer driven by a manual event handler. Instead, `MainWindow.xaml` binds the `Content` of a `ModelVisual3D` to a `MultiBinding` over:
-
-- `Simulation.ActiveDot`
-- `Simulation.ShowLattice`
-- `Simulation.ShowCloud`
-
-The `QuantumDotToModel3DConverter` calls `QuantumDotRenderer3D.BuildModel(...)` whenever any of those values changes. This makes the 3D view automatically update when the user changes material, radius, or visibility flags.
-
-The camera is fitted once to the bounds of a 10 nm dot on load and stays fixed afterwards, so radius changes appear as visible scaling.
+The 3D view binds the `Content` of a `ModelVisual3D` directly to
+`Simulation.Pending3DModel` — a frozen `Model3DGroup` built entirely on a
+background thread by `SimulationViewModel.RecalculateAsync()` (physics, 1P
+cloud, and mesh build each on `Task.Run`; a staleness guard discards superseded
+results, so fast slider drags only ever apply the newest model). There is no
+value converter on the UI thread. The camera is fitted once to the bounds of a
+10 nm dot on load and stays fixed afterwards, so radius changes appear as
+visible scaling.
 
 ## 11. Known simplifications and limitations
 
-- **Infinite well**: No finite barrier, no surface states.
-- **Effective mass**: Isotropic and material-independent inside the dot.
-- **Coulomb term in leading order only**: No full excitonic series, no exchange terms.
-- **Zinc blende only**: No ternary alloys, no core/shell structures.
-- **Static lattice**: No strain, relaxation, or ligand effects.
-- **1S electron cloud only**: No excited-state wave functions.
-- **Performance**: Atoms and cloud points are rendered one-by-one, which does not scale to very large dots.
+- **Bare dots: infinite well** (finite well for core/shell); no surface states.
+- **Effective mass**: isotropic and material-independent inside the dot.
+- **Coulomb term in leading order only**: no full excitonic series, no exchange terms.
+- **Excited-state binding neglected**: optical transitions above 1S carry no
+  Coulomb term; only the ground-state transition is anchored to the Brus gap
+  (§3.6).
+- **Spectrum broadening phenomenological**: fixed 2 % Gaussian per transition —
+  a stand-in for size dispersion, not a lineshape model.
+- **Finite well: S-states only** (`l = 0`): shell-mode spectra contain no P/D
+  transitions.
+- **1P cloud: single orientation** (`m = 0`, dumbbell along z).
+- **Zinc blende binaries only**: no ternary alloys; graded interfaces enter as
+  a strain-relief factor, not as a composition profile.
+- **Feasibility engine**: heuristic factor scores anchored to literature
+  designs (not ab-initio); Monte Carlo priors are simple ± ranges.
 
 ## 12. Where to extend
 
 | Feature | Files to touch |
 |---|---|
+| P/D states of the finite well | `FiniteWellSolver.cs`, `OpticalTransitions.cs` |
 | Ternary alloys (e.g. AgInS₂) | `Material.cs`, `materials.json`, `LatticeEngine.cs`, `AtomPalette.cs` |
-| Core/shell (e.g. AIS/ZnS) | `QuantumDot.cs`, `QuantumDotService.cs`, `LatticeEngine.cs`, `QuantumDotRenderer3D.cs`, `MainWindow.xaml` |
-| Better performance | `ProbabilityCloudGenerator.cs`, `QuantumDotService.cs`, `QuantumDotRenderer3D.cs` |
-| More accurate physics | `QuantumSolver.cs` (finite barriers, strain, exciton corrections) |
-| More plots | `PlotFactory.cs`, `MainWindow.xaml` |
+| Exciton corrections beyond leading order | `QuantumSolver.cs`, `OpticalTransitions.cs` |
+| Environment model (solvent ε_r, Varshni T-shift, pH window) | `SensorPhysics.cs`, `FeasibilityFactors.cs`, `Data/*.json` |
+| Response-time estimate (diffusion + kinetics) | `SensorPhysics.cs`, `SensorViewModel.cs` |
+| Real lineshape model | `PlotFactory.cs` |
 
 ## 13. Continuous integration
 

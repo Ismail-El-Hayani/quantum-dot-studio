@@ -72,7 +72,7 @@ Im Panel **Ergebnisse** werden angezeigt:
 Unten finden Sie **fünf Tabs** mit Plots und Panels:
 
 - **Energie**: Balkendiagramm der berechneten Elektron- und Loch-Niveaus.
-- **Spektrum**: Gauß-förmiger Peak, der die größenabhängige Bandlückenverschiebung visualisiert.
+- **Spektrum**: Absorptionsserie aus optischen Übergängen (1S, 1P, 1D, 2S, 2P — Auswahlregel Δn = Δl = 0, Höhe nach Oszillatorstärke) und 1S-Emissionslinie; zeigt die größenabhängige Bandlückenverschiebung (Quantum-Size-Effekt).
 - **Bandprofil**: (im Shell-Modus) Radiales Leitungs-/Valenzbandprofil mit Band-Offsets und gebundenen Niveaus.
 - **Sensor**: Konfiguration eines QD-Sensors und Darstellung der transduzierten Antwort (siehe Abschnitt 7a).
 

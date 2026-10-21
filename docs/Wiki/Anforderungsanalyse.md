@@ -21,7 +21,7 @@ Das System berechnet die radiale Wahrscheinlichkeitsdichte |R_n,l(r)|² für den
 Das System zeigt ein Balkendiagramm der berechneten Elektronen- und Loch-Niveaus mit der Fermi-Kante (Vakkum-Energie) als Referenz an.
 
 ### FR-007: Emissionsspektrum
-Das System berechnet aus der effektiven Bandlücke die Emissionswellenlänge λ = hc / E_QD und stellt diese als farbigen Peak in einem Spektrum dar. Die Peakposition ändert sich dynamisch mit dem Radius (Quantum-Size-Effekt).
+Das System berechnet aus der effektiven Bandlücke die Emissionswellenlänge λ = hc / E_QD und stellt diese als farbigen Peak in einem Spektrum dar. Die Peakposition ändert sich dynamisch mit dem Radius (Quantum-Size-Effekt). Erweiterung (Optische Übergänge): Das Spektrum zeigt zusätzlich die Absorptionsserie der optischen Übergänge gleicher Quantenzahlen (Auswahlregel Δn = Δl = 0) mit relativen Oszillatorstärken nach m-Entartung (1S : 1P : 1D = 1 : 3 : 5); die Emissionslinie bleibt exakt an der Brus-Bandlücke verankert.
 
 ### FR-008: LaTeX-Export
 Der Benutzer kann einen technischen Bericht als `.tex`-Datei exportieren, der die verwendeten Formeln (Brus-Gleichung, radialer Potentialtopf), eingestellten Parameter, Screenshots der Visualisierung und eine Ergebnistabelle enthält.
