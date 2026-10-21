@@ -48,6 +48,26 @@
                     Margin="0,4,0,4" />
             <TextBlock Text="{Binding Simulation.Radius_nm, StringFormat='{}{0:F1} nm'}" Margin="0,0,0,4" />
 
+            <!-- Umgebung (Roadmap 2.3): Solvens schirmt den Coulomb-Term ab,
+                 Temperatur verschiebt die Bandlücke (Varshni), pH prüft das
+                 Liganden-Stabilitätsfenster in der Machbarkeits-Engine. -->
+            <Expander Header="Umgebung" Margin="0,4,0,8">
+                <StackPanel>
+                    <ComboBox ItemsSource="{Binding Simulation.SolventOptions}"
+                             SelectedItem="{Binding Simulation.SelectedSolvent}"
+                             DisplayMemberPath="Name"
+                             Margin="0,4,0,6" />
+                    <TextBlock Text="Temperatur (K)" FontSize="11" />
+                    <Slider Minimum="250" Maximum="450" Value="{Binding Simulation.Temperature_K, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            TickFrequency="5" IsSnapToTickEnabled="True" Margin="0,4,0,2" />
+                    <TextBlock Text="{Binding Simulation.Temperature_K, StringFormat='{}{0:F0} K'}" Margin="0,0,0,6" />
+                    <TextBlock Text="pH (wässrige Medien)" FontSize="11" />
+                    <Slider Minimum="0" Maximum="14" Value="{Binding Simulation.EnvironmentPh, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            TickFrequency="0.5" IsSnapToTickEnabled="True" Margin="0,4,0,2" />
+                    <TextBlock Text="{Binding Simulation.EnvironmentPh, StringFormat='{}{0:F1}'}" Margin="0,0,0,4" />
+                </StackPanel>
+            </Expander>
+
             <Border Background="LightYellow" BorderBrush="DarkOrange" BorderThickness="1" Padding="8" CornerRadius="4"
                     Visibility="{Binding Simulation.HasValidationError, Converter={StaticResource BooleanToVisibilityConverter}}"
                     Margin="0,0,0,12">
@@ -89,6 +109,7 @@
                     <TextBlock Text="{Binding Simulation.WavelengthText}" />
                     <TextBlock Text="{Binding Simulation.AtomCountText}" />
                     <TextBlock Text="{Binding Simulation.ShellInfoText}" TextWrapping="Wrap" Foreground="SteelBlue" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding Simulation.EnvironmentInfoText}" TextWrapping="Wrap" Foreground="SteelBlue" Margin="0,4,0,0" />
                 </StackPanel>
             </Border>
         </StackPanel>

@@ -78,6 +78,8 @@ public static class MaterialDatabase
             EffectiveMassHole = 0.45,
             DielectricConstant = 10.6,
             LatticeConstant_A = 6.05,
+            VarshniAlpha_eV_per_K = 4.4e-4,
+            VarshniBeta_K = 181,
             Cation = "Cd",
             Anion = "Se"
         },
@@ -89,6 +91,8 @@ public static class MaterialDatabase
             EffectiveMassHole = 0.6,
             DielectricConstant = 12.5,
             LatticeConstant_A = 5.86,
+            VarshniAlpha_eV_per_K = 4.50e-4,
+            VarshniBeta_K = 327,
             Cation = "In",
             Anion = "P"
         },
@@ -100,6 +104,8 @@ public static class MaterialDatabase
             EffectiveMassHole = 0.105,
             DielectricConstant = 17.0,
             LatticeConstant_A = 5.94,
+            VarshniAlpha_eV_per_K = 4.4e-4,
+            VarshniBeta_K = 181,
             Cation = "Pb",
             Anion = "S"
         }

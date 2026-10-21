@@ -51,4 +51,17 @@ public class Material
     /// Anion-Symbol für die Zinkblende-Struktur (z. B. Se).
     /// </summary>
     public string Anion { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Varshni-Koeffizient α in eV/K: Steigung der Bandlücken-Temperatur-
+    /// Verschiebung E_g(T) = E_g(0) − α·T²/(T+β) (Varshni, Physica 34, 149
+    /// (1967)). Referenziert auf die 300-K-Lücke aus BandGap_eV. Quelle im
+    /// materials.json-Notes; ohne Quellenfund gilt der II-VI-Standardwert.
+    /// </summary>
+    public double VarshniAlpha_eV_per_K { get; set; }
+
+    /// <summary>
+    /// Varshni-Temperatur β in K (nahe der Debye-Temperatur, aber anpassbar).
+    /// </summary>
+    public double VarshniBeta_K { get; set; }
 }

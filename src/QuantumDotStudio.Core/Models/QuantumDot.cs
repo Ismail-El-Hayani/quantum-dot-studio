@@ -55,6 +55,12 @@ public class QuantumDot
     public List<Physics.OpticalTransition> OpticalTransitions { get; set; } = new();
 
     /// <summary>
+    /// Umgebungsparameter (Roadmap 2.3: Solvens, Temperatur, pH), mit denen
+    /// dieses Dot berechnet wurde — oder null, wenn nicht gesetzt.
+    /// </summary>
+    public EnvironmentSettings? Environment { get; set; }
+
+    /// <summary>
     /// Elektronen-Wahrscheinlichkeitsdichte-Wolke (Position in nm, normierte |ψ|²).
     /// </summary>
     public List<(System.Numerics.Vector3 Position, float Probability)> ElectronCloud { get; set; } = new();

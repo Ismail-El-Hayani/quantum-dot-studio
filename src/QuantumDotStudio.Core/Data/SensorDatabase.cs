@@ -82,10 +82,10 @@ public static class SensorDatabase
     /// <summary>Eingebaute Fallbacks — inhaltsgleich mit den JSON-Dateien.</summary>
     private static List<Ligand> FallbackLigands => new()
     {
-        new Ligand { LigandId = "MPA", DisplayName = "Mercaptopropionic acid", AnchorAtom = "S", Length_nm = 0.6, Charge_e = -1, Targets = new() { "Cd", "Zn", "Pb" }, Solubility = "aqueous" },
-        new Ligand { LigandId = "TGA", DisplayName = "Thioglycolic acid", AnchorAtom = "S", Length_nm = 0.5, Charge_e = -1, Targets = new() { "Cd", "Zn", "Pb" }, Solubility = "aqueous" },
-        new Ligand { LigandId = "TOPO", DisplayName = "Trioctylphosphine oxide", AnchorAtom = "P", Length_nm = 1.1, Charge_e = 0, Targets = new() { "Cd", "In", "Pb" }, Solubility = "organic" },
-        new Ligand { LigandId = "PEG-5000", DisplayName = "Polyethylene glycol 5000", AnchorAtom = "O", Length_nm = 5.0, Charge_e = 0, Targets = new() { "Zn", "Cd" }, Solubility = "aqueous" }
+        new Ligand { LigandId = "MPA", DisplayName = "Mercaptopropionic acid", AnchorAtom = "S", Length_nm = 0.6, Charge_e = -1, Targets = new() { "Cd", "Zn", "Pb" }, Solubility = "aqueous", StabilityPhMin = 4.0, StabilityPhMax = 11.0, Notes = "Carboxylat-pKa ~4.3, Thiolat-Anker; Puffer-Bereich 6-9" },
+        new Ligand { LigandId = "TGA", DisplayName = "Thioglycolic acid", AnchorAtom = "S", Length_nm = 0.5, Charge_e = -1, Targets = new() { "Cd", "Zn", "Pb" }, Solubility = "aqueous", StabilityPhMin = 4.0, StabilityPhMax = 11.0, Notes = "analog MPA" },
+        new Ligand { LigandId = "TOPO", DisplayName = "Trioctylphosphine oxide", AnchorAtom = "P", Length_nm = 1.1, Charge_e = 0, Targets = new() { "Cd", "In", "Pb" }, Solubility = "organic", Notes = "organisch: pH-unabhaengig" },
+        new Ligand { LigandId = "PEG-5000", DisplayName = "Polyethylene glycol 5000", AnchorAtom = "O", Length_nm = 5.0, Charge_e = 0, Targets = new() { "Zn", "Cd" }, Solubility = "aqueous", StabilityPhMin = 4.0, StabilityPhMax = 10.0, Notes = "PEG hydrolysiert erst stark sauer/basisch" }
     };
 
     private static List<Analyte> FallbackAnalytes => new()

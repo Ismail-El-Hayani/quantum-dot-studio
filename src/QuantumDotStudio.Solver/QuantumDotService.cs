@@ -11,24 +11,30 @@ namespace QuantumDotStudio.Solver;
 public class QuantumDotService
 {
     private readonly LatticeEngine _lattice;
-    private readonly Dictionary<(string MaterialName, double Radius_nm), QuantumDot> _cache;
+    // Cache-Schlüssel inklusive Umgebung (Roadmap 2.3): dieselben (Material, Radius)
+    // bei unterschiedlicher Temperatur/Solvens/pH sind verschiedene Ergebnisse.
+    private readonly Dictionary<(string MaterialName, double Radius_nm, string Solvent, double Temperature_K, double Ph), QuantumDot> _cache;
 
     public QuantumDotService()
     {
         _lattice = new LatticeEngine();
-        _cache = new Dictionary<(string MaterialName, double Radius_nm), QuantumDot>();
+        _cache = new Dictionary<(string MaterialName, double Radius_nm, string Solvent, double Temperature_K, double Ph), QuantumDot>();
     }
 
     /// <summary>
     /// Erzeugt ein vollständig berechnetes Quantum Dot für das gewählte Material und den Radius.
     /// Nutzt einen Cache, um wiederholte Berechnungen mit gleichen Parametern zu vermeiden.
+    /// Umgebung (Roadmap 2.3): Temperatur verschiebt die Bandlücke (Varshni),
+    /// Solvens schirmt den Coulomb-Term ab; Standard (300 K, kein Solvens)
+    /// liefert exakt die bisherigen Werte.
     /// </summary>
-    public QuantumDot BuildQuantumDot(Material material, double radius_nm, int maxLevels = 6)
+    public QuantumDot BuildQuantumDot(Material material, double radius_nm, int maxLevels = 6, EnvironmentSettings? environment = null)
     {
         if (material == null)
             throw new ArgumentNullException(nameof(material));
 
-        var key = (material.Name, radius_nm);
+        var env = environment ?? new EnvironmentSettings();
+        var key = (material.Name, radius_nm, env.Solvent?.Name ?? "", env.Temperature_K, env.Ph ?? -1.0);
         lock (_cache)
         {
             if (_cache.TryGetValue(key, out var cached))
@@ -38,7 +44,8 @@ public class QuantumDotService
         var dot = new QuantumDot
         {
             Material = material,
-            Radius_nm = radius_nm
+            Radius_nm = radius_nm,
+            Environment = env
         };
 
         // Elektron-Confinement (n=1, l=0)
@@ -47,9 +54,15 @@ public class QuantumDotService
         // Loch-Confinement (n=1, l=0)
         dot.ConfinementEnergyHole_eV = QuantumSolver.ConfinementEnergy(radius_nm, material.EffectiveMassHole, 1, 0);
 
-        // Effektive Bandlücke (volle Brus-Gleichung inkl. Coulomb-Term)
-        dot.TotalBandGap_eV = QuantumSolver.BrusBandGap(material, radius_nm);
-        dot.CoulombEnergy_eV = QuantumSolver.CoulombEnergy(radius_nm, material.DielectricConstant);
+        // Umgebung: Varshni-Bandlücke + dielektrisch abgeschirmter Coulomb-Term.
+        double bulkGap = EnvironmentModel.BandGapAtTemperature(
+            material.BandGap_eV, material.VarshniAlpha_eV_per_K, material.VarshniBeta_K, env.Temperature_K);
+        double epsilon = EnvironmentModel.EffectiveDielectric(
+            material.DielectricConstant,
+            env.Solvent is { DielectricConstant: > 0 } s ? s.DielectricConstant : null);
+
+        dot.CoulombEnergy_eV = QuantumSolver.CoulombEnergy(radius_nm, epsilon);
+        dot.TotalBandGap_eV = bulkGap + dot.ConfinementEnergyElectron_eV + dot.ConfinementEnergyHole_eV + dot.CoulombEnergy_eV;
 
         // Emissionswellenlänge
         dot.EmissionWavelength_nm = QuantumSolver.WavelengthFromBandGap(dot.TotalBandGap_eV);
@@ -127,10 +140,11 @@ public class QuantumDotService
     public CoreShellQuantumDot BuildCoreShellQuantumDot(
         Material core, Material shell,
         double coreRadius_nm, double shellThickness_nm,
-        int maxStates = 3)
+        int maxStates = 3, EnvironmentSettings? environment = null)
     {
         ArgumentNullException.ThrowIfNull(core);
         ArgumentNullException.ThrowIfNull(shell);
+        var env = environment ?? new EnvironmentSettings();
 
         if (coreRadius_nm <= 0)
             throw new ArgumentOutOfRangeException(nameof(coreRadius_nm), "Core-Radius muss positiv sein.");
@@ -192,18 +206,27 @@ public class QuantumDotService
 
         dot.ConfinementEnergyElectron_eV = electronEnergies.Count > 0 ? eE : 0.0;
         dot.ConfinementEnergyHole_eV = holeEnergies.Count > 0 ? hE : 0.0;
+        // Umgebung (Roadmap 2.3): Varshni-Verschiebung der Core-Bandlücke,
+        // Solvens schirmt den Coulomb-Term ab (Standard: exakt die alten Werte).
+        double coreGap = EnvironmentModel.BandGapAtTemperature(
+            core.BandGap_eV, core.VarshniAlpha_eV_per_K, core.VarshniBeta_K, env.Temperature_K);
+        double epsilon = EnvironmentModel.EffectiveDielectric(
+            core.DielectricConstant,
+            env.Solvent is { DielectricConstant: > 0 } s ? s.DielectricConstant : null);
+
         dot.TotalBandGap_eV = double.IsNaN(groundTransition)
-            ? core.BandGap_eV
-            : core.BandGap_eV + groundTransition;
+            ? coreGap
+            : coreGap + groundTransition;
         dot.EmissionWavelength_nm = QuantumSolver.WavelengthFromBandGap(dot.TotalBandGap_eV);
 
         // Coulomb: Core-Dielektrikum, Radius = Core-Radius (Emissionsvolumen).
-        dot.CoulombEnergy_eV = QuantumSolver.CoulombEnergy(coreRadius_nm, core.DielectricConstant);
+        dot.CoulombEnergy_eV = QuantumSolver.CoulombEnergy(coreRadius_nm, epsilon);
+        dot.Environment = env;
 
         // Optische Übergänge aus den gebundenen Zuständen des endlichen Topfs
         // (nur S-Zustände, daher reine S-Übergänge 1S→1S, 2S→2S, 3S→3S).
         dot.OpticalTransitions = OpticalTransitions.Compute(
-            core.BandGap_eV, dot.TotalBandGap_eV, dot.EnergyLevels);
+            coreGap, dot.TotalBandGap_eV, dot.EnergyLevels);
 
         // Gitter: Core/Shell-Ausschnitt mit korrekten Elementen je Region.
         dot.Atoms = shellThickness_nm > 0

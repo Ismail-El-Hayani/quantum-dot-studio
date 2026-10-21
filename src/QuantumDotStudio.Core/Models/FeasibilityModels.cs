@@ -67,6 +67,13 @@ public class SensorDesign
     public double FretDistanceUnbound_nm { get; set; }
     /// <summary>FRET: Donor-Akzeptor-Abstand analytgebunden (nm).</summary>
     public double FretDistanceBound_nm { get; set; }
+
+    /// <summary>
+    /// pH-Wert der Einsatzumgebung (Roadmap 2.3) oder null = nicht modelliert.
+    /// Fließt in Faktor 5 (Liganden-Stabilitätsfenster); das Stabilitäts-
+    /// fenster selbst trägt der Ligand (StabilityPhMin/Max).
+    /// </summary>
+    public double? EnvironmentPh { get; set; }
 }
 
 /// <summary>

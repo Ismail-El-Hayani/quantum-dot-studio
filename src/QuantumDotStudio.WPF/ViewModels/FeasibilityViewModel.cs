@@ -219,7 +219,8 @@ public class FeasibilityViewModel : INotifyPropertyChanged
             TargetConcentration_M = TargetConcentration_M,
             ReceptorKd_M = ReceptorKd_M,
             FretDistanceUnbound_nm = coreR + SelectedLigand!.Length_nm + ReceptorOffset_nm + DistanceUnboundExtra_nm,
-            FretDistanceBound_nm = coreR + SelectedLigand.Length_nm + ReceptorOffset_nm + DistanceBoundExtra_nm
+            FretDistanceBound_nm = coreR + SelectedLigand.Length_nm + ReceptorOffset_nm + DistanceBoundExtra_nm,
+            EnvironmentPh = dot.Environment?.Ph
         };
     }
 

@@ -171,8 +171,12 @@ public static class FeasibilityFactors
     /// (neutral) — deshalb ist ZnS die Industrie-Standard-Aussenschale — und
     /// ein nackter Core in Wasser degradieren (−). Roadmap 3.1 Faktor 5
     /// ("ZnSe in water weaker ~0.5, ZnS robust ~0.9").
+    /// Roadmap 2.3: ist ein pH-Wert der Einsatzumgebung gesetzt, multipliziert
+    /// das Liganden-Stabilitaetsfenster (EnvironmentModel.PhWindowScore) —
+    /// außerhalb des Fensters bricht die kolloidale Stabilitaet ein (× 0.25),
+    /// pH-unabhaengige Liganden (kein Fenster) bleiben unveraendert.
     /// </summary>
-    public static double StabilityScore(Ligand? ligand, string medium, Material? shellMaterial)
+    public static double StabilityScore(Ligand? ligand, string medium, Material? shellMaterial, double? ph = null)
     {
         if (ligand is null)
             return 0.0; // keine Funktionalisierung: instabil in jedem Medium
@@ -201,6 +205,10 @@ public static class FeasibilityFactors
             if (shellMaterial is not null)
                 score += 0.05; // Schale schirmt auch in organischen Medien ab
         }
+
+        // Roadmap 2.3: Liganden-pH-Fenster der Einsatzumgebung.
+        if (ph is double p)
+            score *= EnvironmentModel.PhWindowScore(ligand, p);
 
         return Math.Clamp(score, 0.0, 1.0);
     }

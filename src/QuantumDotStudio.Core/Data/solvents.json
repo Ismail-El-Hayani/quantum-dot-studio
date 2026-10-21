@@ -1,0 +1,27 @@
+[
+  {
+    "Name": "Wasser",
+    "DielectricConstant": 78.4,
+    "Notes": "CRC Handbook, 25 °C"
+  },
+  {
+    "Name": "Ethanol",
+    "DielectricConstant": 24.5,
+    "Notes": "CRC Handbook, 25 °C"
+  },
+  {
+    "Name": "Chloroform",
+    "DielectricConstant": 4.81,
+    "Notes": "CRC Handbook, 25 °C"
+  },
+  {
+    "Name": "Toluol",
+    "DielectricConstant": 2.38,
+    "Notes": "CRC Handbook, 25 °C"
+  },
+  {
+    "Name": "Hexan",
+    "DielectricConstant": 1.88,
+    "Notes": "CRC Handbook, 20 °C"
+  }
+]

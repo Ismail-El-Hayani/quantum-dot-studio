@@ -7,6 +7,9 @@
     "DielectricConstant": 10.6,
     "LatticeConstant_A": 6.05,
     "ElectronAffinity_eV": 4.9,
+    "VarshniAlpha_eV_per_K": 0.00044,
+    "VarshniBeta_K": 181,
+    "VarshniSource": "Varshni, Physica 34, 149 (1967)",
     "Cation": "Cd",
     "Anion": "Se"
   },
@@ -18,6 +21,9 @@
     "DielectricConstant": 12.5,
     "LatticeConstant_A": 5.86,
     "ElectronAffinity_eV": 4.4,
+    "VarshniAlpha_eV_per_K": 0.00045,
+    "VarshniBeta_K": 327,
+    "VarshniSource": "Standard-Parametersatz (E_g(0 K) = 1.421 eV, alpha = 4.50e-4, beta = 327 K)",
     "Cation": "In",
     "Anion": "P"
   },
@@ -29,6 +35,9 @@
     "DielectricConstant": 17.0,
     "LatticeConstant_A": 5.94,
     "ElectronAffinity_eV": 4.6,
+    "VarshniAlpha_eV_per_K": 0.00044,
+    "VarshniBeta_K": 181,
+    "VarshniSource": "Generischer II-VI-Schaetzwert (keine verifizierte Quelle)",
     "Cation": "Pb",
     "Anion": "S"
   },
@@ -40,6 +49,9 @@
     "DielectricConstant": 8.9,
     "LatticeConstant_A": 5.832,
     "ElectronAffinity_eV": 4.5,
+    "VarshniAlpha_eV_per_K": 0.00043,
+    "VarshniBeta_K": 78.2,
+    "VarshniSource": "J. Phys. Chem. C 2017, SI (alpha = 0.00043 eV/K, beta = 78.2 K)",
     "Cation": "Cd",
     "Anion": "S"
   },
@@ -51,6 +63,9 @@
     "DielectricConstant": 8.7,
     "LatticeConstant_A": 5.668,
     "ElectronAffinity_eV": 4.3,
+    "VarshniAlpha_eV_per_K": 0.00044,
+    "VarshniBeta_K": 181,
+    "VarshniSource": "Generischer II-VI-Schaetzwert (keine verifizierte Quelle)",
     "Cation": "Zn",
     "Anion": "Se"
   },
@@ -62,6 +77,9 @@
     "DielectricConstant": 10.2,
     "LatticeConstant_A": 6.482,
     "ElectronAffinity_eV": 4.3,
+    "VarshniAlpha_eV_per_K": 0.00044,
+    "VarshniBeta_K": 181,
+    "VarshniSource": "Generischer II-VI-Schaetzwert (keine verifizierte Quelle)",
     "Cation": "Cd",
     "Anion": "Te"
   },
@@ -73,6 +91,9 @@
     "DielectricConstant": 8.3,
     "LatticeConstant_A": 5.409,
     "ElectronAffinity_eV": 3.9,
+    "VarshniAlpha_eV_per_K": 0.00044,
+    "VarshniBeta_K": 181,
+    "VarshniSource": "Generischer II-VI-Schaetzwert (fruehe Varshni-Fits fuer ZnS sind laut Paessler unzuvLaessig)",
     "Cation": "Zn",
     "Anion": "S"
   }

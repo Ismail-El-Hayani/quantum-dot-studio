@@ -6,7 +6,10 @@
     "Length_nm": 0.6,
     "Charge_e": -1,
     "Targets": ["Cd", "Zn", "Pb"],
-    "Solubility": "aqueous"
+    "Solubility": "aqueous",
+    "StabilityPhMin": 4.0,
+    "StabilityPhMax": 11.0,
+    "Notes": "Carboxylat-pKa ~4.3, Thiolat-Anker; typischer Pufferbereich 6-9"
   },
   {
     "LigandId": "TGA",
@@ -15,7 +18,10 @@
     "Length_nm": 0.5,
     "Charge_e": -1,
     "Targets": ["Cd", "Zn", "Pb"],
-    "Solubility": "aqueous"
+    "Solubility": "aqueous",
+    "StabilityPhMin": 4.0,
+    "StabilityPhMax": 11.0,
+    "Notes": "analog MPA"
   },
   {
     "LigandId": "TOPO",
@@ -24,7 +30,8 @@
     "Length_nm": 1.1,
     "Charge_e": 0,
     "Targets": ["Cd", "In", "Pb"],
-    "Solubility": "organic"
+    "Solubility": "organic",
+    "Notes": "organisch: pH-unabhaengig"
   },
   {
     "LigandId": "PEG-5000",
@@ -33,7 +40,10 @@
     "Length_nm": 5.0,
     "Charge_e": 0,
     "Targets": ["Zn", "Cd"],
-    "Solubility": "aqueous"
+    "Solubility": "aqueous",
+    "StabilityPhMin": 4.0,
+    "StabilityPhMax": 10.0,
+    "Notes": "PEG hydrolysiert erst stark sauer/basisch"
   },
   {
     "LigandId": "GOx",
@@ -42,7 +52,10 @@
     "Length_nm": 6.0,
     "Charge_e": -1,
     "Targets": ["Cd", "Zn"],
-    "Solubility": "aqueous"
+    "Solubility": "aqueous",
+    "StabilityPhMin": 4.0,
+    "StabilityPhMax": 8.0,
+    "Notes": "Enzym-Stabilitaet: GOx-Optimum pH 5.5, Denaturierung <4 und >8"
   },
   {
     "LigandId": "ProteinG",
@@ -51,6 +64,9 @@
     "Length_nm": 3.0,
     "Charge_e": 0,
     "Targets": ["Cd", "Zn"],
-    "Solubility": "aqueous"
+    "Solubility": "aqueous",
+    "StabilityPhMin": 5.0,
+    "StabilityPhMax": 9.0,
+    "Notes": "IgG-Bindungsprotein: neutraler Bereich"
   }
 ]

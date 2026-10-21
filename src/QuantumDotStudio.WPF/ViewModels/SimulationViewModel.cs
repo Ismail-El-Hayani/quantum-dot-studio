@@ -34,6 +34,15 @@ public class SimulationViewModel : INotifyPropertyChanged
     private bool _showLattice = true;
     private bool _showCloud = true;
     private bool _showCloud1P;
+    private double _temperature_K = 300.0;
+    private double _environmentPh = 7.0;
+    private Solvent _selectedSolvent = NoneSolvent;
+
+    /// <summary>
+    /// Kein-Solvens-Eintrag (ε_r &lt;= 0) für die ComboBox — Auswahl bedeutet:
+    /// keine dielektrische Korrektur (Coulomb nur mit der Dot-ε_r).
+    /// </summary>
+    private static readonly Solvent NoneSolvent = new() { Name = "– (keine Korrektur)", DielectricConstant = 0 };
 
     public SimulationViewModel()
     {
@@ -44,6 +53,11 @@ public class SimulationViewModel : INotifyPropertyChanged
         // ComboBox-Referenz (SelectedItem) mit dem Feld uebereinstimmt.
         _selectedMaterial = Materials[0];
         _selectedShellMaterial = Materials.Count > 1 ? Materials[1] : Materials[0];
+        // Solvens-Optionen aus derselben Listeninstanz (ComboBox-Pitfall: SelectedItem
+        // bindet per Referenz) — erster Eintrag ist die Kein-Solvens-Auswahl.
+        SolventOptions = new List<Solvent> { NoneSolvent };
+        SolventOptions.AddRange(SolventDatabase.Defaults);
+        _selectedSolvent = SolventOptions[0];
         RecalculateCommand = new RelayCommand(_ => { _recalcTimer?.Stop(); Recalculate(); }, _ => CanRecalculate());
 
         Recalculate();
@@ -56,6 +70,11 @@ public class SimulationViewModel : INotifyPropertyChanged
         Materials = new List<Material>(MaterialDatabase.Defaults);
         _selectedMaterial = Materials[0];
         _selectedShellMaterial = Materials.Count > 1 ? Materials[1] : Materials[0];
+        // Solvens-Optionen aus derselben Listeninstanz (ComboBox-Pitfall: SelectedItem
+        // bindet per Referenz) — erster Eintrag ist die Kein-Solvens-Auswahl.
+        SolventOptions = new List<Solvent> { NoneSolvent };
+        SolventOptions.AddRange(SolventDatabase.Defaults);
+        _selectedSolvent = SolventOptions[0];
         RecalculateCommand = new RelayCommand(_ => { _recalcTimer?.Stop(); Recalculate(); }, _ => CanRecalculate());
 
         Recalculate();
@@ -195,6 +214,7 @@ public class SimulationViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(WavelengthText));
             OnPropertyChanged(nameof(AtomCountText));
             OnPropertyChanged(nameof(ShellInfoText));
+            OnPropertyChanged(nameof(EnvironmentInfoText));
             OnPropertyChanged(nameof(EnergyLevelPlot));
             OnPropertyChanged(nameof(SpectrumPlot));
             OnPropertyChanged(nameof(BandProfilePlot));
@@ -250,6 +270,80 @@ public class SimulationViewModel : INotifyPropertyChanged
                     OnPropertyChanged(nameof(ActiveDot)); // 3D-Konverter neu binden
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Verfügbare Solventien inklusive „keine Korrektur“ (Roadmap 2.3).
+    /// </summary>
+    public List<Solvent> SolventOptions { get; }
+
+    /// <summary>
+    /// Gewähltes Solvens (oder die Kein-Solvens-Auswahl, ε_r &lt;= 0).
+    /// </summary>
+    public Solvent SelectedSolvent
+    {
+        get => _selectedSolvent;
+        set
+        {
+            if (_selectedSolvent != value)
+            {
+                _selectedSolvent = value;
+                OnPropertyChanged(nameof(SelectedSolvent));
+                Recalculate();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Umgebungstemperatur in K (250–450, Standard 300). Verschiebt die
+    /// Bandlücke nach Varshni (Roadmap 2.3).
+    /// </summary>
+    public double Temperature_K
+    {
+        get => _temperature_K;
+        set
+        {
+            if (Math.Abs(_temperature_K - value) > 1e-6)
+            {
+                _temperature_K = value;
+                OnPropertyChanged(nameof(Temperature_K));
+                RestartRecalcTimer();
+            }
+        }
+    }
+
+    /// <summary>
+    /// pH-Wert der Umgebung (Roadmap 2.3): fließt über das aktive Dot in die
+    /// Machbarkeits-Engine (Liganden-Stabilitätsfenster, Faktor 5).
+    /// </summary>
+    public double EnvironmentPh
+    {
+        get => _environmentPh;
+        set
+        {
+            if (Math.Abs(_environmentPh - value) > 1e-6)
+            {
+                _environmentPh = value;
+                OnPropertyChanged(nameof(EnvironmentPh));
+                RestartRecalcTimer();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Kurzinfo zur Umgebung des aktiven Dots (Temperatur, Solvens, pH).
+    /// </summary>
+    public string EnvironmentInfoText
+    {
+        get
+        {
+            var env = ActiveDot?.Environment;
+            if (env is null)
+                return string.Empty;
+
+            string solvent = env.Solvent is { DielectricConstant: > 0 } s ? s.Name : "kein Solvens";
+            return $"Umgebung: {env.Temperature_K:F0} K | {solvent} | pH {env.Ph:F1}";
         }
     }
 
@@ -364,9 +458,16 @@ public class SimulationViewModel : INotifyPropertyChanged
         bool want1P = _showCloud1P;
         int seq = ++_recalcSequence;
 
+        // Umgebung (Roadmap 2.3) als Momentaufnahme für den Hintergrund-Thread;
+        // die Kein-Solvens-Auswahl (ε_r <= 0) wirkt wie kein Solvens.
+        var env = new EnvironmentSettings(
+            Solvent: _selectedSolvent is { DielectricConstant: > 0 } s ? s : null,
+            Temperature_K: _temperature_K,
+            Ph: _environmentPh);
+
         QuantumDot dot = await Task.Run(() => useShell && shell != null
-            ? _service.BuildCoreShellQuantumDot(core, shell, radius, shellThickness)
-            : _service.BuildQuantumDot(core, radius));
+            ? _service.BuildCoreShellQuantumDot(core, shell, radius, shellThickness, environment: env)
+            : _service.BuildQuantumDot(core, radius, environment: env));
         if (want1P)
             await Task.Run(() => _service.EnsureElectronCloud1P(dot));
 

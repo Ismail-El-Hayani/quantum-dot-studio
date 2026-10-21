@@ -17,8 +17,20 @@ public class Ligand
     public int Charge_e { get; set; }
     /// <summary>Oberflaechenkationen, an die dieser Ligand bindet.</summary>
     public List<string> Targets { get; set; } = new();
-    /// <summary>"aqueous" oder "organic" — Medium, in dem der Ligand stabilitaet verleiht.</summary>
+    /// <summary>"aqueous" oder "organic" — Medium, in dem der Ligand Stabilität verleiht.</summary>
     public string Solubility { get; set; } = "aqueous";
+
+    /// <summary>
+    /// pH-Stabilitätsfenster: Minimum (nur wässrige Liganden; organische Liganden
+    /// wie TOPO sind pH-unabhängig → null = "nicht anwendbar").
+    /// </summary>
+    public double? StabilityPhMin { get; set; }
+
+    /// <summary>pH-Stabilitätsfenster: Maximum (siehe StabilityPhMin).</summary>
+    public double? StabilityPhMax { get; set; }
+
+    /// <summary>Freie Notiz (Quelle des Stabilitätsfensters).</summary>
+    public string Notes { get; set; } = "";
 }
 
 /// <summary>

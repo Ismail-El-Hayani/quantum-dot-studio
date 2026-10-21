@@ -129,7 +129,7 @@ public static class FeasibilityEngine
         }
 
         // Faktor 5: Stabilitaet (Shell-CHEMIE zaehlt: Sulfid robust, Selenid schwach)
-        double f5 = FeasibilityFactors.StabilityScore(design.Ligand, app.Medium, design.ShellMaterial);
+        double f5 = FeasibilityFactors.StabilityScore(design.Ligand, app.Medium, design.ShellMaterial, design.EnvironmentPh);
 
         // Faktor 6: Bioconjugation (nur FRET-Designs benoetigen einen Rezeptor;
         // Quenching/PET/Charge wirken direkt auf der Oberflaeche)
