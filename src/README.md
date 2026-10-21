@@ -1,19 +1,20 @@
-# Quantum Dot Studio
+# Quantum Dot Studio — src
 
-## .NET-Version
+## .NET version
 
-Das Projekt wird mit **.NET 10** entwickelt, da dies die aktuell installierte SDK-Version in der Entwicklungsumgebung ist.
+The project targets **.NET 10**.
 
-## Solution-Struktur
+## Solution structure
 
-| Projekt | Zweck |
-|---------|-------|
-| `QuantumDotStudio.Core` | Domänenmodelle, Materialdatenbank (JSON-basiert), gemeinsame Typen |
-| `QuantumDotStudio.Solver` | Quantenmechanische Berechnungen (Brus-Formel mit Coulomb-Term, sphärischer Potentialtopf) |
-| `QuantumDotStudio.Renderer` | 3D-Visualisierung (Helix Toolkit) |
-| `QuantumDotStudio.Reports` | LaTeX-Export, Plotting-Vorbereitung |
-| `QuantumDotStudio.WPF` | Hauptanwendung mit MVVM |
-| `QuantumDotStudio.Tests` | xUnit-Tests für Solver, Core, Renderer und Reports |
+| Project | Purpose |
+|---------|---------|
+| `QuantumDotStudio.Core` | Domain models, sensor + feasibility physics, JSON databases (materials, ligands, analytes, templates, feasibility weights) |
+| `QuantumDotStudio.Solver` | Quantum mechanics (Brus formula with Coulomb term, numeric Bessel zeros, finite spherical well), band alignment, strain, optical transitions, feasibility engine, service orchestration |
+| `QuantumDotStudio.Renderer` | 3D visualization (Helix Toolkit, merged meshes, LOD) |
+| `QuantumDotStudio.Reports` | LaTeX report generation |
+| `QuantumDotStudio.WPF` | MVVM application (simulation, sensor, feasibility views) |
+| `QuantumDotStudio.Tests` | xUnit tests for Solver, Core, Renderer, Reports and the WPF pipeline |
+| `QuantumDotStudio.Bench` | Renderer performance benchmark (median of 5 runs) |
 
 ## Build
 
@@ -29,11 +30,18 @@ cd src
 dotnet test QuantumDotStudio.slnx
 ```
 
-## Materialien hinzufügen
+## Run
 
-Die Materialdatenbank liegt in `src/QuantumDotStudio.Core/Data/materials.json`
-und wird ins Ausgabeverzeichnis kopiert. Neue Materialien (z. B. ZnS, CdTe)
-können dort ohne Code-Änderung ergänzt werden:
+```bash
+cd src
+dotnet run --project QuantumDotStudio.WPF
+```
+
+## Adding materials
+
+The material database lives in `src/QuantumDotStudio.Core/Data/materials.json`
+and is copied to the output directory. New materials (e.g. ZnS, CdTe) can be
+added there without any code change:
 
 ```json
 {
@@ -48,5 +56,6 @@ können dort ohne Code-Änderung ergänzt werden:
 }
 ```
 
-Fehlt die Datei zur Laufzeit, greift ein eingebauter Fallback
-(CdSe, InP, PbS) in `MaterialDatabase`.
+If the file is missing at runtime, a built-in fallback
+(CdSe, InP, PbS) in `MaterialDatabase` is used. The same pattern applies to the
+ligand, analyte, sensor-template and feasibility-weight databases in `Data/`.
