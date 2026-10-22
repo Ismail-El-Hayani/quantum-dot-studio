@@ -486,9 +486,12 @@ Nernst `ψ(pH)`, PET quench fraction vs. `E₀` with the CB edge.
 
 Produces a `.tex` document containing:
 1. Summary with material, radius, band gap, and wavelength.
-2. Physical model section with the confinement-energy and Brus equations.
+2. Physical model section with the confinement-energy and Brus equations;
+   the assumption list states the finite well for core/shell dots and the
+   environment (temperature, medium, pH) when it deviates from the reference.
 3. Material-parameter table.
-4. Quantum-dot results table.
+4. Quantum-dot results table — with an environment block (temperature, solvent,
+   pH, effective permittivity) when the environment is set.
 5. Energy-level table.
 6. Spectrum section with an emission-color box.
 7. Optional core/shell chapter (heterostructures only).
@@ -496,7 +499,7 @@ Produces a `.tex` document containing:
    feasibility result is passed in.
 9. Optional embedded 3D screenshot (PNG) or placeholder.
 
-The emission color is computed from wavelength with a simple visible-spectrum RGB approximation (`WavelengthToRgb`). Generated reports are compile-verified with pdflatex.
+The emission color is computed from wavelength with a simple visible-spectrum RGB approximation (`WavelengthToRgb`). All numbers are formatted with a fixed German culture (decimal comma), so the same calculation yields the same document on any machine. Generated reports are compile-verified with pdflatex.
 
 ## 10. WPF binding
 

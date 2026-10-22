@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using QuantumDotStudio.Core.Models;
+using QuantumDotStudio.Core.Physics;
 
 namespace QuantumDotStudio.Reports;
 
@@ -22,6 +23,26 @@ public static class LatexReportGenerator
         ArgumentNullException.ThrowIfNull(dot);
         ArgumentNullException.ThrowIfNull(dot.Material);
 
+        // Zahlenformate deterministisch: der Bericht ist deutsch (babel ngerman),
+        // also Dezimalkomma — unabhaengig von der Locale des Rechners (sonst
+        // druckt dieselbe Berechnung je nach System "10.60" oder "10,60").
+        var previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = GermanCulture;
+        try
+        {
+            return GenerateCore(dot, screenshotPath, title, author, feasibility);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
+    }
+
+    /// <summary>Feste Kultur für alle Zahlen im Bericht (deutsches Dezimalkomma).</summary>
+    private static readonly CultureInfo GermanCulture = CultureInfo.GetCultureInfo("de-DE");
+
+    private static string GenerateCore(QuantumDot dot, string? screenshotPath, string title, string author, Core.Models.FeasibilityResult? feasibility)
+    {
         var sb = new StringBuilder();
 
         sb.AppendLine(@"\documentclass[11pt,a4paper]{article}");
@@ -46,7 +67,7 @@ public static class LatexReportGenerator
         sb.AppendLine();
 
         AppendSummary(sb, dot);
-        AppendTheory(sb);
+        AppendTheory(sb, dot);
         AppendMaterialTable(sb, dot.Material);
         AppendQuantumDotTable(sb, dot);
         AppendEnergyLevels(sb, dot);
@@ -76,23 +97,54 @@ public static class LatexReportGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// True, wenn für den Dot eine echte Umgebung gesetzt ist (Temperatur ≠
+    /// Referenz, Solvens mit ε_r &gt; 0 oder pH). Der Standard (300 K, kein
+    /// Solvens) bleibt ohne Umgebungsblock — der Report dokumentiert nur
+    /// Abweichungen von der Referenzbedingung.
+    /// </summary>
+    private static bool HasEnvironment(QuantumDot dot)
+    {
+        if (dot.Environment is not { } env)
+            return false;
+
+        return env.Temperature_K != QuantumDotStudio.Core.Physics.EnvironmentModel.ReferenceTemperature_K
+            || env.Solvent is { DielectricConstant: > 0 }
+            || env.Ph is not null;
+    }
+
     private static void AppendSummary(StringBuilder sb, QuantumDot dot)
     {
         sb.AppendLine(@"\section{Zusammenfassung}");
         sb.AppendLine(@"Dieser Bericht dokumentiert die quantenmechanische Berechnung eines sphärischen Halbleiter-Nanokristalls (Quantum Dot).");
         sb.AppendLine($"Für das Material {Escape(dot.Material.Name)} bei einem Radius von {dot.Radius_nm:F2}\\,nm ergibt sich eine effektive Bandlücke von {dot.TotalBandGap_eV:F3}\\,eV,");
         sb.AppendLine($"was einer Emissionswellenlänge von {dot.EmissionWavelength_nm:F1}\\,nm entspricht.");
+        if (HasEnvironment(dot) && dot.Environment is { } env)
+        {
+            string solvent = env.Solvent is { DielectricConstant: > 0 } s ? s.Name : "ohne Solvens";
+            string phPart = env.Ph is double p ? $", pH {p:F1}" : string.Empty;
+            sb.AppendLine($"Die Berechnung berücksichtigt eine Umgebung bei {env.Temperature_K:F0}\\,K im Medium {Escape(solvent)}{phPart};");
+            sb.AppendLine("Bandlücke und Coulomb-Abschirmung sind entsprechend korrigiert.");
+        }
         sb.AppendLine();
     }
 
-    private static void AppendTheory(StringBuilder sb)
+    private static void AppendTheory(StringBuilder sb, QuantumDot dot)
     {
         sb.AppendLine(@"\section{Physikalisches Modell}");
         sb.AppendLine(@"\subsection{Annahmen}");
         sb.AppendLine(@"\begin{itemize}");
-        sb.AppendLine(@"\item Unendlich hoher sphärischer Potentialtopf mit Radius $R$");
+        sb.AppendLine(dot is CoreShellQuantumDot
+            ? @"\item Endlicher sphärischer Potentialtopf im Core (Barriere = Band-Offset) mit Radius $R$"
+            : @"\item Unendlich hoher sphärischer Potentialtopf mit Radius $R$");
         sb.AppendLine(@"\item Isotrope effektive Masse $m^*$");
         sb.AppendLine(@"\item Coulomb-Wechselwirkung in führender Ordnung (Brus-Gleichung)");
+        if (HasEnvironment(dot) && dot.Environment is { } env)
+        {
+            string solvent = env.Solvent is { DielectricConstant: > 0 } s ? s.Name : "ohne Solvens";
+            string phPart = env.Ph is double p ? $", pH {p:F1}" : string.Empty;
+            sb.AppendLine($@"\item Umgebung: {env.Temperature_K:F0}\,K im Medium {Escape(solvent)}{phPart} (Varshni-Bandlücke, dielektrische Abschirmung)");
+        }
         sb.AppendLine(@"\end{itemize}");
         sb.AppendLine();
 
@@ -159,6 +211,18 @@ public static class LatexReportGenerator
         sb.AppendLine($@"Coulomb-Term $E_C$ & {dot.CoulombEnergy_eV:F4}\,eV \\ ");
         sb.AppendLine($@"Effektive Bandlücke $E_{{\text{{QD}}}}$ & {dot.TotalBandGap_eV:F4}\,eV \\ ");
         sb.AppendLine($@"Emissionswellenlänge $\lambda$ & {dot.EmissionWavelength_nm:F1}\,nm \\ ");
+        if (HasEnvironment(dot) && dot.Environment is { } env)
+        {
+            string solvent = env.Solvent is { DielectricConstant: > 0 } s ? s.Name : "ohne Solvens";
+            double epsEff = EnvironmentModel.EffectiveDielectric(
+                dot.Material.DielectricConstant,
+                env.Solvent is { DielectricConstant: > 0 } s2 ? s2.DielectricConstant : null);
+            sb.AppendLine($@"Temperatur & {env.Temperature_K:F0}\,K \\ ");
+            sb.AppendLine($@"Solvens & {Escape(solvent)} \\ ");
+            if (env.Ph is double p)
+                sb.AppendLine($@"pH & {p:F1} \\ ");
+            sb.AppendLine($@"Effektive Dielektrizitätskonstante $\varepsilon_r^{{\text{{eff}}}}$ & {epsEff:F2} \\ ");
+        }
         sb.AppendLine(@"\bottomrule");
         sb.AppendLine(@"\end{tabular}");
         sb.AppendLine(@"\caption{Ergebnisse der Quantum-Dot-Berechnung.}");

@@ -41,7 +41,10 @@ public class LatexReportGeneratorTests
 
         string latex = LatexReportGenerator.Generate(dot);
 
-        Assert.Contains(dot.EmissionWavelength_nm.ToString("F1"), latex);
+        // Der Report formatiert Zahlen deterministisch mit deutscher Kultur
+        // (Dezimalkomma) — der Test muss dieselbe Kultur verwenden, sonst
+        // schlaegt er auf einem englischsprachigen Rechner fehl.
+        Assert.Contains(dot.EmissionWavelength_nm.ToString("F1", System.Globalization.CultureInfo.GetCultureInfo("de-DE")), latex);
         Assert.Contains("Emissionsfarbe", latex);
     }
 
