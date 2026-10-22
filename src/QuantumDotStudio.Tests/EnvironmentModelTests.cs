@@ -195,7 +195,7 @@ public class EnvironmentModelTests
                 EmissionWindowMin_nm = 550.0,
                 EmissionWindowMax_nm = 650.0
             },
-            EnvironmentPh = ph
+            Environment = new EnvironmentSettings(Ph: ph)
         };
 
         double pIn = FeasibilityEngine.Evaluate(Design(7.0)).P;

@@ -54,15 +54,14 @@ public class QuantumDotService
         // Loch-Confinement (n=1, l=0)
         dot.ConfinementEnergyHole_eV = QuantumSolver.ConfinementEnergy(radius_nm, material.EffectiveMassHole, 1, 0);
 
-        // Umgebung: Varshni-Bandlücke + dielektrisch abgeschirmter Coulomb-Term.
-        double bulkGap = EnvironmentModel.BandGapAtTemperature(
-            material.BandGap_eV, material.VarshniAlpha_eV_per_K, material.VarshniBeta_K, env.Temperature_K);
+        // Umgebung: Varshni-Bandlücke + dielektrisch abgeschirmter Coulomb-Term
+        // (die Summenformel liegt im Solver — keine zweite Implementierung).
         double epsilon = EnvironmentModel.EffectiveDielectric(
             material.DielectricConstant,
             env.Solvent is { DielectricConstant: > 0 } s ? s.DielectricConstant : null);
 
         dot.CoulombEnergy_eV = QuantumSolver.CoulombEnergy(radius_nm, epsilon);
-        dot.TotalBandGap_eV = bulkGap + dot.ConfinementEnergyElectron_eV + dot.ConfinementEnergyHole_eV + dot.CoulombEnergy_eV;
+        dot.TotalBandGap_eV = QuantumSolver.BrusBandGap(material, radius_nm, env);
 
         // Emissionswellenlänge
         dot.EmissionWavelength_nm = QuantumSolver.WavelengthFromBandGap(dot.TotalBandGap_eV);

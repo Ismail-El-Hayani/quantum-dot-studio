@@ -1,4 +1,5 @@
 using QuantumDotStudio.Core.Models;
+using QuantumDotStudio.Core.Physics;
 
 namespace QuantumDotStudio.Solver;
 
@@ -155,11 +156,33 @@ public static class QuantumSolver
     /// E_QD = E_g + ΔE_e + ΔE_h − 1.786 e² / (4π ε₀ ε_r R).
     /// </summary>
     public static double BrusBandGap(Material material, double radius_nm)
+        => BrusBandGap(material, radius_nm, null);
+
+    /// <summary>
+    /// Brus-Bandlücke unter Umgebungsbedingungen (Roadmap 2.3): die
+    /// Bandlücke wird per Varshni auf die Temperatur bezogen und der
+    /// Coulomb-Term mit der effektiven Dielektrizität (Dot/Solvens-Mischung)
+    /// abgeschirmt. Ohne Umgebung (null) exakt die klassische Formel.
+    /// </summary>
+    public static double BrusBandGap(Material material, double radius_nm, EnvironmentSettings? environment)
     {
+        double bandGap = environment is null
+            ? material.BandGap_eV
+            : EnvironmentModel.BandGapAtTemperature(
+                material.BandGap_eV, material.VarshniAlpha_eV_per_K, material.VarshniBeta_K,
+                environment.Temperature_K);
+
         double eElectron = ConfinementEnergy(radius_nm, material.EffectiveMassElectron, 1, 0);
         double eHole = ConfinementEnergy(radius_nm, material.EffectiveMassHole, 1, 0);
-        double eCoulomb = CoulombEnergy(radius_nm, material.DielectricConstant);
-        return material.BandGap_eV + eElectron + eHole + eCoulomb;
+
+        double dielectric = environment is null
+            ? material.DielectricConstant
+            : EnvironmentModel.EffectiveDielectric(
+                material.DielectricConstant,
+                environment.Solvent is { DielectricConstant: > 0 } s ? s.DielectricConstant : null);
+
+        double eCoulomb = CoulombEnergy(radius_nm, dielectric);
+        return bandGap + eElectron + eHole + eCoulomb;
     }
 
     /// <summary>

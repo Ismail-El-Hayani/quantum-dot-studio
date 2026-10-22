@@ -129,7 +129,7 @@ public static class FeasibilityEngine
         }
 
         // Faktor 5: Stabilitaet (Shell-CHEMIE zaehlt: Sulfid robust, Selenid schwach)
-        double f5 = FeasibilityFactors.StabilityScore(design.Ligand, app.Medium, design.ShellMaterial, design.EnvironmentPh);
+        double f5 = FeasibilityFactors.StabilityScore(design.Ligand, app.Medium, design.ShellMaterial, design.Environment?.Ph);
 
         // Faktor 6: Bioconjugation (nur FRET-Designs benoetigen einen Rezeptor;
         // Quenching/PET/Charge wirken direkt auf der Oberflaeche)
@@ -202,16 +202,24 @@ public static class FeasibilityEngine
             CoreRadius_nm = design.CoreRadius_nm,
             ShellThickness_nm = design.ShellThickness_nm,
             GradedInterface = design.GradedInterface,
-            // Emission mit perturbiertem Material neu rechnen (volle Brus)
+            // Emission mit perturbiertem Material neu rechnen (volle Brus,
+            // mit Umgebung: Temperatur/Solvens verschieben die Emission)
             EmissionWavelength_nm = QuantumSolver.WavelengthFromBandGap(
-                QuantumSolver.BrusBandGap(core, design.CoreRadius_nm)),
+                QuantumSolver.BrusBandGap(core, design.CoreRadius_nm, design.Environment)),
             Ligand = design.Ligand,
             Analyte = design.Analyte,
             Application = design.Application,
             TargetConcentration_M = design.TargetConcentration_M,
             ReceptorKd_M = design.ReceptorKd_M,
             FretDistanceUnbound_nm = design.FretDistanceUnbound_nm,
-            FretDistanceBound_nm = design.FretDistanceBound_nm
+            FretDistanceBound_nm = design.FretDistanceBound_nm,
+            // Umgebung und Interferent MUESSEN weitergereicht werden: sonst
+            // verschwinden der pH-Abschlag (Faktor 5) und die Selektivitaet
+            // (Faktor 4b) aus dem Monte-Carlo-Band — das Band waere dann
+            // schmaler und optimistischer als die Punkt-Schaetzung.
+            Environment = design.Environment,
+            Interferent = design.Interferent,
+            InterferentConcentration_M = design.InterferentConcentration_M
         };
         return d;
     }

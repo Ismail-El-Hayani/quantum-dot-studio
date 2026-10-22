@@ -69,11 +69,13 @@ public class SensorDesign
     public double FretDistanceBound_nm { get; set; }
 
     /// <summary>
-    /// pH-Wert der Einsatzumgebung (Roadmap 2.3) oder null = nicht modelliert.
-    /// Fließt in Faktor 5 (Liganden-Stabilitätsfenster); das Stabilitäts-
-    /// fenster selbst trägt der Ligand (StabilityPhMin/Max).
+    /// Umgebung der Sensor-Designs (Roadmap 2.3): Solvens, Temperatur und pH.
+    /// Der pH fließt in Faktor 5 (Liganden-Stabilitätsfenster), die Umgebung
+    /// in die Emissionsberechnung der Monte-Carlo-Samples (Perturb muss sie
+    /// weiterreichen, sonst verschwindet sie aus dem Unsicherheitsband).
+    /// Null = Umgebung nicht modelliert.
     /// </summary>
-    public double? EnvironmentPh { get; set; }
+    public EnvironmentSettings? Environment { get; set; }
 }
 
 /// <summary>
