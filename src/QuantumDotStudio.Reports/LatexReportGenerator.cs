@@ -20,21 +20,58 @@ public static class LatexReportGenerator
     /// <returns>LaTeX-Quelltext als UTF-8 String.</returns>
     public static string Generate(QuantumDot dot, string? screenshotPath = null, string title = "Quantum Dot Studio — Technischer Bericht", string author = "Quantum Dot Studio", Core.Models.FeasibilityResult? feasibility = null)
     {
-        ArgumentNullException.ThrowIfNull(dot);
-        ArgumentNullException.ThrowIfNull(dot.Material);
+        var result = TryGenerate(dot, screenshotPath, title, author, feasibility);
+        if (!result.Success)
+            throw new InvalidOperationException(string.Join("; ", result.Errors));
+        return result.Document;
+    }
 
-        // Zahlenformate deterministisch: der Bericht ist deutsch (babel ngerman),
-        // also Dezimalkomma — unabhaengig von der Locale des Rechners (sonst
-        // druckt dieselbe Berechnung je nach System "10.60" oder "10,60").
-        var previousCulture = CultureInfo.CurrentCulture;
-        CultureInfo.CurrentCulture = GermanCulture;
+    /// <summary>
+    /// Erzeugt den Bericht, ohne zu werfen: recoverbare Probleme (fehlendes
+    /// Material, leere Atomsammlung, fehlende Energieniveaus) werden gesammelt
+    /// und im Ergebnis zurückgegeben. Der Aufrufer kann Dokument und Warnungen
+    /// anzeigen, statt an einer Ausnahme zu scheitern.
+    /// </summary>
+    public static ReportResult TryGenerate(QuantumDot dot, string? screenshotPath = null, string title = "Quantum Dot Studio — Technischer Bericht", string author = "Quantum Dot Studio", Core.Models.FeasibilityResult? feasibility = null)
+    {
+        var errors = new List<string>();
+        if (dot is null)
+        {
+            errors.Add("QuantumDot ist null.");
+            return new ReportResult { Document = string.Empty, Errors = errors };
+        }
+
+        if (dot.Material is null)
+            errors.Add("QuantumDot.Material ist null; Materialtabelle entfaellt.");
+        if (dot.Atoms is null)
+            errors.Add("QuantumDot.Atoms ist null; Atomzahl wird als 0 ausgegeben.");
+        if (dot.EnergyLevels is null)
+            errors.Add("QuantumDot.EnergyLevels ist null; Energieniveaus-Tabelle bleibt leer.");
+
         try
         {
-            return GenerateCore(dot, screenshotPath, title, author, feasibility);
+            // Zahlenformate deterministisch: der Bericht ist deutsch (babel ngerman),
+            // also Dezimalkomma — unabhaengig von der Locale des Rechners (sonst
+            // druckt dieselbe Berechnung je nach System "10.60" oder "10,60").
+            var previousCulture = CultureInfo.CurrentCulture;
+            CultureInfo.CurrentCulture = GermanCulture;
+            try
+            {
+                return new ReportResult
+                {
+                    Document = GenerateCore(dot, screenshotPath, title, author, feasibility),
+                    Errors = errors
+                };
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = previousCulture;
+            }
         }
-        finally
+        catch (Exception ex)
         {
-            CultureInfo.CurrentCulture = previousCulture;
+            errors.Add($"Berichtserzeugung fehlgeschlagen: {ex.Message}");
+            return new ReportResult { Document = string.Empty, Errors = errors };
         }
     }
 
@@ -43,58 +80,59 @@ public static class LatexReportGenerator
 
     private static string GenerateCore(QuantumDot dot, string? screenshotPath, string title, string author, Core.Models.FeasibilityResult? feasibility)
     {
-        var sb = new StringBuilder();
+        var latex = new LatexBuilder();
 
-        sb.AppendLine(@"\documentclass[11pt,a4paper]{article}");
-        sb.AppendLine(@"\usepackage[utf8]{inputenc}");
-        sb.AppendLine(@"\usepackage[T1]{fontenc}");
-        sb.AppendLine(@"\usepackage[ngerman]{babel}");
-        sb.AppendLine(@"\usepackage{amsmath,amssymb}");
-        sb.AppendLine(@"\usepackage{siunitx}");
-        sb.AppendLine(@"\usepackage{booktabs}");
-        sb.AppendLine(@"\usepackage{geometry}");
-        sb.AppendLine(@"\usepackage{xcolor}");
-        sb.AppendLine(@"\usepackage{graphicx}");
-        sb.AppendLine(@"\usepackage{hyperref}");
-        sb.AppendLine(@"\geometry{a4paper, margin=2.5cm}");
-        sb.AppendLine(@"\definecolor{emissioncolor}{RGB}{" + WavelengthToRgb(dot.EmissionWavelength_nm) + @"}");
-        sb.AppendLine();
-        sb.AppendLine(@"\title{" + Escape(title) + @"}");
-        sb.AppendLine(@"\author{" + Escape(author) + @"}");
-        sb.AppendLine(@"\date{" + DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + @"}");
-        sb.AppendLine(@"\begin{document}");
-        sb.AppendLine(@"\maketitle");
-        sb.AppendLine();
+        latex.AppendLine(@"\documentclass[11pt,a4paper]{article}");
+        latex.AppendLine(@"\usepackage[utf8]{inputenc}");
+        latex.AppendLine(@"\usepackage[T1]{fontenc}");
+        latex.AppendLine(@"\usepackage[ngerman]{babel}");
+        latex.AppendLine(@"\usepackage{amsmath,amssymb}");
+        latex.AppendLine(@"\usepackage{siunitx}");
+        latex.AppendLine(@"\usepackage{booktabs}");
+        latex.AppendLine(@"\usepackage{geometry}");
+        latex.AppendLine(@"\usepackage{xcolor}");
+        latex.AppendLine(@"\usepackage{graphicx}");
+        latex.AppendLine(@"\usepackage{hyperref}");
+        latex.AppendLine(@"\geometry{a4paper, margin=2.5cm}");
+        latex.AppendLine(@"\definecolor{emissioncolor}{RGB}{" + WavelengthToRgb(dot.EmissionWavelength_nm) + @"}");
+        latex.AppendLine();
+        latex.AppendLine(@"\title{" + Escape(title) + @"}");
+        latex.AppendLine(@"\author{" + Escape(author) + @"}");
+        latex.AppendLine(@"\date{" + DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + @"}");
+        latex.AppendLine(@"\begin{document}");
+        latex.AppendLine(@"\maketitle");
+        latex.AppendLine();
 
-        AppendSummary(sb, dot);
-        AppendTheory(sb, dot);
-        AppendMaterialTable(sb, dot.Material);
-        AppendQuantumDotTable(sb, dot);
-        AppendEnergyLevels(sb, dot);
-        AppendSpectrum(sb, dot);
+        AppendSummary(latex, dot);
+        AppendTheory(latex, dot);
+        if (dot.Material is { } material)
+            AppendMaterialTable(latex, material);
+        AppendQuantumDotTable(latex, dot);
+        AppendEnergyLevels(latex, dot);
+        AppendSpectrum(latex, dot);
 
         if (dot is CoreShellQuantumDot cs)
         {
-            AppendCoreShellSection(sb, cs);
+            AppendCoreShellSection(latex, cs);
         }
 
         if (feasibility is not null)
         {
-            AppendFeasibilitySection(sb, feasibility);
+            AppendFeasibilitySection(latex, feasibility);
         }
 
         if (!string.IsNullOrWhiteSpace(screenshotPath) && File.Exists(screenshotPath))
         {
-            AppendScreenshot(sb, screenshotPath);
+            AppendScreenshot(latex, screenshotPath);
         }
         else
         {
-            AppendScreenshotPlaceholder(sb);
+            AppendScreenshotPlaceholder(latex);
         }
 
-        sb.AppendLine(@"\end{document}");
+        latex.AppendLine(@"\end{document}");
 
-        return sb.ToString();
+        return latex.ToString();
     }
 
     /// <summary>
@@ -113,155 +151,155 @@ public static class LatexReportGenerator
             || env.Ph is not null;
     }
 
-    private static void AppendSummary(StringBuilder sb, QuantumDot dot)
+    private static void AppendSummary(LatexBuilder latex, QuantumDot dot)
     {
-        sb.AppendLine(@"\section{Zusammenfassung}");
-        sb.AppendLine(@"Dieser Bericht dokumentiert die quantenmechanische Berechnung eines sphärischen Halbleiter-Nanokristalls (Quantum Dot).");
-        sb.AppendLine($"Für das Material {Escape(dot.Material.Name)} bei einem Radius von {dot.Radius_nm:F2}\\,nm ergibt sich eine effektive Bandlücke von {dot.TotalBandGap_eV:F3}\\,eV,");
-        sb.AppendLine($"was einer Emissionswellenlänge von {dot.EmissionWavelength_nm:F1}\\,nm entspricht.");
+        latex.AppendLine(@"\section{Zusammenfassung}");
+        latex.AppendLine(@"Dieser Bericht dokumentiert die quantenmechanische Berechnung eines sphärischen Halbleiter-Nanokristalls (Quantum Dot).");
+        latex.AppendLine($"Für das Material {Escape(dot.Material?.Name ?? "unbekannt")} bei einem Radius von {dot.Radius_nm:F2}\\,nm ergibt sich eine effektive Bandlücke von {dot.TotalBandGap_eV:F3}\\,eV,");
+        latex.AppendLine($"was einer Emissionswellenlänge von {dot.EmissionWavelength_nm:F1}\\,nm entspricht.");
         if (HasEnvironment(dot) && dot.Environment is { } env)
         {
             string solvent = env.Solvent is { DielectricConstant: > 0 } s ? s.Name : "ohne Solvens";
             string phPart = env.Ph is double p ? $", pH {p:F1}" : string.Empty;
-            sb.AppendLine($"Die Berechnung berücksichtigt eine Umgebung bei {env.Temperature_K:F0}\\,K im Medium {Escape(solvent)}{phPart};");
-            sb.AppendLine("Bandlücke und Coulomb-Abschirmung sind entsprechend korrigiert.");
+            latex.AppendLine($"Die Berechnung berücksichtigt eine Umgebung bei {env.Temperature_K:F0}\\,K im Medium {Escape(solvent)}{phPart};");
+            latex.AppendLine("Bandlücke und Coulomb-Abschirmung sind entsprechend korrigiert.");
         }
-        sb.AppendLine();
+        latex.AppendLine();
     }
 
-    private static void AppendTheory(StringBuilder sb, QuantumDot dot)
+    private static void AppendTheory(LatexBuilder latex, QuantumDot dot)
     {
-        sb.AppendLine(@"\section{Physikalisches Modell}");
-        sb.AppendLine(@"\subsection{Annahmen}");
-        sb.AppendLine(@"\begin{itemize}");
-        sb.AppendLine(dot is CoreShellQuantumDot
+        latex.AppendLine(@"\section{Physikalisches Modell}");
+        latex.AppendLine(@"\subsection{Annahmen}");
+        latex.AppendLine(@"\begin{itemize}");
+        latex.AppendLine(dot is CoreShellQuantumDot
             ? @"\item Endlicher sphärischer Potentialtopf im Core (Barriere = Band-Offset) mit Radius $R$"
             : @"\item Unendlich hoher sphärischer Potentialtopf mit Radius $R$");
-        sb.AppendLine(@"\item Isotrope effektive Masse $m^*$");
-        sb.AppendLine(@"\item Coulomb-Wechselwirkung in führender Ordnung (Brus-Gleichung)");
+        latex.AppendLine(@"\item Isotrope effektive Masse $m^*$");
+        latex.AppendLine(@"\item Coulomb-Wechselwirkung in führender Ordnung (Brus-Gleichung)");
         if (HasEnvironment(dot) && dot.Environment is { } env)
         {
             string solvent = env.Solvent is { DielectricConstant: > 0 } s ? s.Name : "ohne Solvens";
             string phPart = env.Ph is double p ? $", pH {p:F1}" : string.Empty;
-            sb.AppendLine($@"\item Umgebung: {env.Temperature_K:F0}\,K im Medium {Escape(solvent)}{phPart} (Varshni-Bandlücke, dielektrische Abschirmung)");
+            latex.AppendLine($@"\item Umgebung: {env.Temperature_K:F0}\,K im Medium {Escape(solvent)}{phPart} (Varshni-Bandlücke, dielektrische Abschirmung)");
         }
-        sb.AppendLine(@"\end{itemize}");
-        sb.AppendLine();
+        latex.AppendLine(@"\end{itemize}");
+        latex.AppendLine();
 
-        sb.AppendLine(@"\subsection{Energieniveaus im sphärischen Potentialtopf}");
-        sb.AppendLine(@"Die Confinement-Energie eines Teilchens im unendlichen sphärischen Topf ist");
-        sb.AppendLine(@"\begin{equation}");
-        sb.AppendLine(@"E_{n,l} = \frac{\hbar^2 \alpha_{n,l}^2}{2 m^* R^2},");
-        sb.AppendLine(@"\end{equation}");
-        sb.AppendLine(@"wobei $\alpha_{n,l}$ die $l$-te Nullstelle der sphärischen Bessel-Funktion $j_n$ ist.");
-        sb.AppendLine(@"Für den Grundzustand gilt $\alpha_{1,0}=\pi$.");
-        sb.AppendLine();
+        latex.AppendLine(@"\subsection{Energieniveaus im sphärischen Potentialtopf}");
+        latex.AppendLine(@"Die Confinement-Energie eines Teilchens im unendlichen sphärischen Topf ist");
+        latex.AppendLine(@"\begin{equation}");
+        latex.AppendLine(@"E_{n,l} = \frac{\hbar^2 \alpha_{n,l}^2}{2 m^* R^2},");
+        latex.AppendLine(@"\end{equation}");
+        latex.AppendLine(@"wobei $\alpha_{n,l}$ die $l$-te Nullstelle der sphärischen Bessel-Funktion $j_n$ ist.");
+        latex.AppendLine(@"Für den Grundzustand gilt $\alpha_{1,0}=\pi$.");
+        latex.AppendLine();
 
-        sb.AppendLine(@"\subsection{Effektive Bandlücke}");
-        sb.AppendLine(@"Die effektive Bandlücke des Quantum Dots folgt aus der Bulk-Bandlücke $E_g$,");
-        sb.AppendLine(@"den Confinement-Energien von Elektron und Loch sowie dem Coulomb-Term:");
-        sb.AppendLine(@"\begin{equation}");
-        sb.AppendLine(@"E_{\text{QD}} = E_g + \Delta E_e + \Delta E_h - \frac{1{,}786\, e^2}{4 \pi \varepsilon_0 \varepsilon_r R}.");
-        sb.AppendLine(@"\end{equation}");
-        sb.AppendLine();
+        latex.AppendLine(@"\subsection{Effektive Bandlücke}");
+        latex.AppendLine(@"Die effektive Bandlücke des Quantum Dots folgt aus der Bulk-Bandlücke $E_g$,");
+        latex.AppendLine(@"den Confinement-Energien von Elektron und Loch sowie dem Coulomb-Term:");
+        latex.AppendLine(@"\begin{equation}");
+        latex.AppendLine(@"E_{\text{QD}} = E_g + \Delta E_e + \Delta E_h - \frac{1{,}786\, e^2}{4 \pi \varepsilon_0 \varepsilon_r R}.");
+        latex.AppendLine(@"\end{equation}");
+        latex.AppendLine();
 
-        sb.AppendLine(@"\subsection{Emissionswellenlänge}");
-        sb.AppendLine(@"Aus der Bandlücke wird die Emissionswellenlänge berechnet:");
-        sb.AppendLine(@"\begin{equation}");
-        sb.AppendLine(@"\lambda = \frac{h c}{E_{\text{QD}}}.");
-        sb.AppendLine(@"\end{equation}");
-        sb.AppendLine();
+        latex.AppendLine(@"\subsection{Emissionswellenlänge}");
+        latex.AppendLine(@"Aus der Bandlücke wird die Emissionswellenlänge berechnet:");
+        latex.AppendLine(@"\begin{equation}");
+        latex.AppendLine(@"\lambda = \frac{h c}{E_{\text{QD}}}.");
+        latex.AppendLine(@"\end{equation}");
+        latex.AppendLine();
     }
 
-    private static void AppendMaterialTable(StringBuilder sb, Material material)
+    private static void AppendMaterialTable(LatexBuilder latex, Material material)
     {
-        sb.AppendLine(@"\section{Materialparameter}");
-        sb.AppendLine(@"\begin{table}[h]");
-        sb.AppendLine(@"\centering");
-        sb.AppendLine(@"\begin{tabular}{lr}");
-        sb.AppendLine(@"\toprule");
-        sb.AppendLine(@"\textbf{Parameter} & \textbf{Wert} \\");
-        sb.AppendLine(@"\midrule");
-        sb.AppendLine($"Material & {Escape(material.Name)} \\\\ ");
-        sb.AppendLine($"Bulk-Bandlücke $E_g$ & {material.BandGap_eV:F3}\\,eV \\\\ ");
-        sb.AppendLine($"Effektive Elektronenmasse $m_e^*$ & {material.EffectiveMassElectron:F3}\\,$m_0$ \\\\ ");
-        sb.AppendLine($"Effektive Löchermasse $m_h^*$ & {material.EffectiveMassHole:F3}\\,$m_0$ \\\\ ");
-        sb.AppendLine($@"Dielektrizitätskonstante $\varepsilon_r$ & {material.DielectricConstant:F2} \\ ");
-        sb.AppendLine($@"Gitterkonstante $a$ & {material.LatticeConstant_A:F3}\,\AA \\ ");
-        sb.AppendLine(@"\bottomrule");
-        sb.AppendLine(@"\end{tabular}");
-        sb.AppendLine(@"\caption{Physikalische Parameter des gewählten Halbleitermaterials.}");
-        sb.AppendLine(@"\end{table}");
-        sb.AppendLine();
+        latex.AppendLine(@"\section{Materialparameter}");
+        latex.AppendLine(@"\begin{table}[h]");
+        latex.AppendLine(@"\centering");
+        latex.AppendLine(@"\begin{tabular}{lr}");
+        latex.AppendLine(@"\toprule");
+        latex.AppendLine(@"\textbf{Parameter} & \textbf{Wert} \\");
+        latex.AppendLine(@"\midrule");
+        latex.AppendLine($"Material & {Escape(material.Name)} \\\\ ");
+        latex.AppendLine($"Bulk-Bandlücke $E_g$ & {material.BandGap_eV:F3}\\,eV \\\\ ");
+        latex.AppendLine($"Effektive Elektronenmasse $m_e^*$ & {material.EffectiveMassElectron:F3}\\,$m_0$ \\\\ ");
+        latex.AppendLine($"Effektive Löchermasse $m_h^*$ & {material.EffectiveMassHole:F3}\\,$m_0$ \\\\ ");
+        latex.AppendLine($@"Dielektrizitätskonstante $\varepsilon_r$ & {material.DielectricConstant:F2} \\ ");
+        latex.AppendLine($@"Gitterkonstante $a$ & {material.LatticeConstant_A:F3}\,\AA \\ ");
+        latex.AppendLine(@"\bottomrule");
+        latex.AppendLine(@"\end{tabular}");
+        latex.AppendLine(@"\caption{Physikalische Parameter des gewählten Halbleitermaterials.}");
+        latex.AppendLine(@"\end{table}");
+        latex.AppendLine();
     }
 
-    private static void AppendQuantumDotTable(StringBuilder sb, QuantumDot dot)
+    private static void AppendQuantumDotTable(LatexBuilder latex, QuantumDot dot)
     {
-        sb.AppendLine(@"\section{Quantum-Dot-Parameter und Ergebnisse}");
-        sb.AppendLine(@"\begin{table}[h]");
-        sb.AppendLine(@"\centering");
-        sb.AppendLine(@"\begin{tabular}{lr}");
-        sb.AppendLine(@"\toprule");
-        sb.AppendLine(@"\textbf{Größe} & \textbf{Wert} \\\\");
-        sb.AppendLine(@"\midrule");
-        sb.AppendLine($"Radius $R$ & {dot.Radius_nm:F2}\\,nm \\\\ ");
-        sb.AppendLine($"Anzahl Atome im Gitter & {dot.Atoms.Count} \\\\ ");
-        sb.AppendLine($"Confinement-Energie Elektron & {dot.ConfinementEnergyElectron_eV:F4}\\,eV \\\\ ");
-        sb.AppendLine($"Confinement-Energie Loch & {dot.ConfinementEnergyHole_eV:F4}\\,eV \\\\ ");
-        sb.AppendLine($@"Coulomb-Term $E_C$ & {dot.CoulombEnergy_eV:F4}\,eV \\ ");
-        sb.AppendLine($@"Effektive Bandlücke $E_{{\text{{QD}}}}$ & {dot.TotalBandGap_eV:F4}\,eV \\ ");
-        sb.AppendLine($@"Emissionswellenlänge $\lambda$ & {dot.EmissionWavelength_nm:F1}\,nm \\ ");
+        latex.AppendLine(@"\section{Quantum-Dot-Parameter und Ergebnisse}");
+        latex.AppendLine(@"\begin{table}[h]");
+        latex.AppendLine(@"\centering");
+        latex.AppendLine(@"\begin{tabular}{lr}");
+        latex.AppendLine(@"\toprule");
+        latex.AppendLine(@"\textbf{Größe} & \textbf{Wert} \\\\");
+        latex.AppendLine(@"\midrule");
+        latex.AppendLine($"Radius $R$ & {dot.Radius_nm:F2}\\,nm \\\\ ");
+        latex.AppendLine($"Anzahl Atome im Gitter & {dot.Atoms?.Count ?? 0} \\\\ ");
+        latex.AppendLine($"Confinement-Energie Elektron & {dot.ConfinementEnergyElectron_eV:F4}\\,eV \\\\ ");
+        latex.AppendLine($"Confinement-Energie Loch & {dot.ConfinementEnergyHole_eV:F4}\\,eV \\\\ ");
+        latex.AppendLine($@"Coulomb-Term $E_C$ & {dot.CoulombEnergy_eV:F4}\,eV \\ ");
+        latex.AppendLine($@"Effektive Bandlücke $E_{{\text{{QD}}}}$ & {dot.TotalBandGap_eV:F4}\,eV \\ ");
+        latex.AppendLine($@"Emissionswellenlänge $\lambda$ & {dot.EmissionWavelength_nm:F1}\,nm \\ ");
         if (HasEnvironment(dot) && dot.Environment is { } env)
         {
             string solvent = env.Solvent is { DielectricConstant: > 0 } s ? s.Name : "ohne Solvens";
             double epsEff = EnvironmentModel.EffectiveDielectric(
                 dot.Material.DielectricConstant,
                 env.Solvent is { DielectricConstant: > 0 } s2 ? s2.DielectricConstant : null);
-            sb.AppendLine($@"Temperatur & {env.Temperature_K:F0}\,K \\ ");
-            sb.AppendLine($@"Solvens & {Escape(solvent)} \\ ");
+            latex.AppendLine($@"Temperatur & {env.Temperature_K:F0}\,K \\ ");
+            latex.AppendLine($@"Solvens & {Escape(solvent)} \\ ");
             if (env.Ph is double p)
-                sb.AppendLine($@"pH & {p:F1} \\ ");
-            sb.AppendLine($@"Effektive Dielektrizitätskonstante $\varepsilon_r^{{\text{{eff}}}}$ & {epsEff:F2} \\ ");
+                latex.AppendLine($@"pH & {p:F1} \\ ");
+            latex.AppendLine($@"Effektive Dielektrizitätskonstante $\varepsilon_r^{{\text{{eff}}}}$ & {epsEff:F2} \\ ");
         }
-        sb.AppendLine(@"\bottomrule");
-        sb.AppendLine(@"\end{tabular}");
-        sb.AppendLine(@"\caption{Ergebnisse der Quantum-Dot-Berechnung.}");
-        sb.AppendLine(@"\end{table}");
-        sb.AppendLine();
+        latex.AppendLine(@"\bottomrule");
+        latex.AppendLine(@"\end{tabular}");
+        latex.AppendLine(@"\caption{Ergebnisse der Quantum-Dot-Berechnung.}");
+        latex.AppendLine(@"\end{table}");
+        latex.AppendLine();
     }
 
-    private static void AppendEnergyLevels(StringBuilder sb, QuantumDot dot)
+    private static void AppendEnergyLevels(LatexBuilder latex, QuantumDot dot)
     {
-        sb.AppendLine(@"\section{Berechnete Energieniveaus}");
-        sb.AppendLine(@"\begin{table}[h]");
-        sb.AppendLine(@"\centering");
-        sb.AppendLine(@"\begin{tabular}{cccr}");
-        sb.AppendLine(@"\toprule");
-        sb.AppendLine(@"\textbf{Teilchen} & \textbf{Label} & \textbf{$(n,l)$} & \textbf{Energie (eV)} \\\\");
-        sb.AppendLine(@"\midrule");
+        latex.AppendLine(@"\section{Berechnete Energieniveaus}");
+        latex.AppendLine(@"\begin{table}[h]");
+        latex.AppendLine(@"\centering");
+        latex.AppendLine(@"\begin{tabular}{cccr}");
+        latex.AppendLine(@"\toprule");
+        latex.AppendLine(@"\textbf{Teilchen} & \textbf{Label} & \textbf{$(n,l)$} & \textbf{Energie (eV)} \\\\");
+        latex.AppendLine(@"\midrule");
 
-        foreach (var level in dot.EnergyLevels.OrderBy(e => e.Energy_eV))
+        foreach (var level in (dot.EnergyLevels ?? new List<EnergyLevel>()).OrderBy(e => e.Energy_eV))
         {
             var particle = level.Particle == Particle.Electron ? "Elektron" : "Loch";
-            sb.AppendLine($@"{Escape(particle)} & {Escape(level.Label)} & ({level.PrincipalQuantumNumber_n},{level.AngularMomentum_l}) & {level.Energy_eV:F4} \\ ");
+            latex.AppendLine($@"{Escape(particle)} & {Escape(level.Label)} & ({level.PrincipalQuantumNumber_n},{level.AngularMomentum_l}) & {level.Energy_eV:F4} \\ ");
         }
 
-        sb.AppendLine(@"\bottomrule");
-        sb.AppendLine(@"\end{tabular}");
-        sb.AppendLine(@"\caption{Energieniveaus des Elektrons und des Lochs im sphärischen Potentialtopf.}");
-        sb.AppendLine(@"\end{table}");
-        sb.AppendLine();
+        latex.AppendLine(@"\bottomrule");
+        latex.AppendLine(@"\end{tabular}");
+        latex.AppendLine(@"\caption{Energieniveaus des Elektrons und des Lochs im sphärischen Potentialtopf.}");
+        latex.AppendLine(@"\end{table}");
+        latex.AppendLine();
     }
 
-    private static void AppendSpectrum(StringBuilder sb, QuantumDot dot)
+    private static void AppendSpectrum(LatexBuilder latex, QuantumDot dot)
     {
-        sb.AppendLine(@"\section{Emissionsspektrum}");
-        sb.AppendLine($@"Der berechnete Übergang liegt bei $\lambda = {dot.EmissionWavelength_nm:F1}$\,nm,");
-        sb.AppendLine($"was im folgenden Farbblock visualisiert ist:");
-        sb.AppendLine(@"\begin{center}");
-        sb.AppendLine(@"\fcolorbox{black}{emissioncolor}{\parbox{0.4\textwidth}{\centering\vspace{1cm}Emissionsfarbe\vspace{1cm}}}");
-        sb.AppendLine(@"\end{center}");
-        sb.AppendLine();
+        latex.AppendLine(@"\section{Emissionsspektrum}");
+        latex.AppendLine($@"Der berechnete Übergang liegt bei $\lambda = {dot.EmissionWavelength_nm:F1}$\,nm,");
+        latex.AppendLine($"was im folgenden Farbblock visualisiert ist:");
+        latex.AppendLine(@"\begin{center}");
+        latex.AppendLine(@"\fcolorbox{black}{emissioncolor}{\parbox{0.4\textwidth}{\centering\vspace{1cm}Emissionsfarbe\vspace{1cm}}}");
+        latex.AppendLine(@"\end{center}");
+        latex.AppendLine();
     }
 
     /// <summary>
@@ -269,118 +307,118 @@ public static class LatexReportGenerator
     /// Faktor-Tabelle mit Gewichten und Vorschlaegen, Monte-Carlo-Band und
     /// Varianzzerlegung.
     /// </summary>
-    private static void AppendFeasibilitySection(StringBuilder sb, FeasibilityResult feasibility)
+    private static void AppendFeasibilitySection(LatexBuilder latex, FeasibilityResult feasibility)
     {
-        sb.AppendLine(@"\section{Machbarkeit des Sensor-Entwurfs}");
+        latex.AppendLine(@"\section{Machbarkeit des Sensor-Entwurfs}");
         string verdictWord = feasibility.Verdict switch
         {
             "green" => "machbar (grün)",
             "amber" => "riskant (gelb)",
             _ => "nicht empfohlen (rot)"
         };
-        sb.AppendLine($@"Die Bewertung des Sensor-Entwurfs ergibt \textbf{{P(Erfolg) = {feasibility.P * 100:F0}\,\%}} — {verdictWord}.");
-        sb.AppendLine();
-        sb.AppendLine(@"\begin{table}[h]");
-        sb.AppendLine(@"\centering");
-        sb.AppendLine(@"\begin{tabular}{lrr}");
-        sb.AppendLine(@"\toprule");
-        sb.AppendLine(@"\textbf{Faktor} & \textbf{Gewicht} & \textbf{Score} \\");
-        sb.AppendLine(@"\midrule");
+        latex.AppendLine($@"Die Bewertung des Sensor-Entwurfs ergibt \textbf{{P(Erfolg) = {feasibility.P * 100:F0}\,\%}} — {verdictWord}.");
+        latex.AppendLine();
+        latex.AppendLine(@"\begin{table}[h]");
+        latex.AppendLine(@"\centering");
+        latex.AppendLine(@"\begin{tabular}{lrr}");
+        latex.AppendLine(@"\toprule");
+        latex.AppendLine(@"\textbf{Faktor} & \textbf{Gewicht} & \textbf{Score} \\");
+        latex.AppendLine(@"\midrule");
         foreach (var f in feasibility.Factors)
         {
-            sb.AppendLine($@"{Escape(f.Name)} & {f.Weight * 100:F0}\,\% & {f.Score * 100:F0}\,\% \\");
+            latex.AppendLine($@"{Escape(f.Name)} & {f.Weight * 100:F0}\,\% & {f.Score * 100:F0}\,\% \\");
         }
-        sb.AppendLine(@"\midrule");
-        sb.AppendLine($@"\textbf{{Geometrisches Mittel}} & \textbf{{100\,\%}} & \textbf{{{feasibility.P * 100:F0}\,\%}} \\");
-        sb.AppendLine(@"\bottomrule");
-        sb.AppendLine(@"\end{tabular}");
-        sb.AppendLine(@"\caption{Machbarkeitsfaktoren des Sensor-Entwurfs (gewichtetes geometrisches Mittel; ein disqualifizierender Faktor kann nicht kompensiert werden).}");
-        sb.AppendLine(@"\end{table}");
-        sb.AppendLine();
+        latex.AppendLine(@"\midrule");
+        latex.AppendLine($@"\textbf{{Geometrisches Mittel}} & \textbf{{100\,\%}} & \textbf{{{feasibility.P * 100:F0}\,\%}} \\");
+        latex.AppendLine(@"\bottomrule");
+        latex.AppendLine(@"\end{tabular}");
+        latex.AppendLine(@"\caption{Machbarkeitsfaktoren des Sensor-Entwurfs (gewichtetes geometrisches Mittel; ein disqualifizierender Faktor kann nicht kompensiert werden).}");
+        latex.AppendLine(@"\end{table}");
+        latex.AppendLine();
 
         var suggestions = feasibility.Factors.Where(f => !string.IsNullOrWhiteSpace(f.Suggestion)).ToList();
         if (suggestions.Count > 0)
         {
-            sb.AppendLine(@"\subsection{Empfehlungen}");
-            sb.AppendLine(@"\begin{itemize}");
+            latex.AppendLine(@"\subsection{Empfehlungen}");
+            latex.AppendLine(@"\begin{itemize}");
             foreach (var f in suggestions)
             {
-                sb.AppendLine($@"\item \textbf{{{Escape(f.Name)}}}: {Escape(f.Suggestion)}");
+                latex.AppendLine($@"\item \textbf{{{Escape(f.Name)}}}: {Escape(f.Suggestion)}");
             }
-            sb.AppendLine(@"\end{itemize}");
-            sb.AppendLine();
+            latex.AppendLine(@"\end{itemize}");
+            latex.AppendLine();
         }
 
         if (feasibility.HasMonteCarlo)
         {
-            sb.AppendLine($@"\subsection{{Unsicherheit (Monte-Carlo, N = {feasibility.McSampleCount})}}");
-            sb.AppendLine($@"Materialparameter-Unsicherheiten ($\pm 0{{,}}05$\,eV Bandlücke, $\pm 10$\,\% Massen, $\pm 0{{,}}05$\,\AA{{}} Gitterkonstante) ergeben:");
-            sb.AppendLine(@"\begin{itemize}");
-            sb.AppendLine($@"\item Median: {feasibility.McMedian * 100:F0}\,\%");
-            sb.AppendLine($@"\item 5--95-\%-Band: {feasibility.McP05 * 100:F0}--{feasibility.McP95 * 100:F0}\,\%");
-            sb.AppendLine(@"\end{itemize}");
-            sb.AppendLine(@"\paragraph{Varianzzerlegung.} Der dominante Unsicherheitsbeitrag:");
-            sb.AppendLine(@"\begin{itemize}");
+            latex.AppendLine($@"\subsection{{Unsicherheit (Monte-Carlo, N = {feasibility.McSampleCount})}}");
+            latex.AppendLine($@"Materialparameter-Unsicherheiten ($\pm 0{{,}}05$\,eV Bandlücke, $\pm 10$\,\% Massen, $\pm 0{{,}}05$\,\AA{{}} Gitterkonstante) ergeben:");
+            latex.AppendLine(@"\begin{itemize}");
+            latex.AppendLine($@"\item Median: {feasibility.McMedian * 100:F0}\,\%");
+            latex.AppendLine($@"\item 5--95-\%-Band: {feasibility.McP05 * 100:F0}--{feasibility.McP95 * 100:F0}\,\%");
+            latex.AppendLine(@"\end{itemize}");
+            latex.AppendLine(@"\paragraph{Varianzzerlegung.} Der dominante Unsicherheitsbeitrag:");
+            latex.AppendLine(@"\begin{itemize}");
             foreach (var v in feasibility.Decomposition)
             {
-                sb.AppendLine($@"\item {Escape(v.Input)}: {v.Fraction * 100:F0}\,\%");
+                latex.AppendLine($@"\item {Escape(v.Input)}: {v.Fraction * 100:F0}\,\%");
             }
-            sb.AppendLine(@"\end{itemize}");
+            latex.AppendLine(@"\end{itemize}");
         }
-        sb.AppendLine();
+        latex.AppendLine();
     }
 
-    private static void AppendScreenshotPlaceholder(StringBuilder sb)
+    private static void AppendScreenshotPlaceholder(LatexBuilder latex)
     {
-        sb.AppendLine(@"\section{Visualisierung}");
-        sb.AppendLine(@"\begin{figure}[h]");
-        sb.AppendLine(@"\centering");
-        sb.AppendLine(@"\fbox{\parbox{0.8\textwidth}{\centering\vspace{3cm}Screenshot der 3D-Visualisierung (manuell einfügen)\vspace{3cm}}}");
-        sb.AppendLine(@"\caption{Platzhalter für den Screenshot der 3D-Ansicht.}");
-        sb.AppendLine(@"\end{figure}");
-        sb.AppendLine();
+        latex.AppendLine(@"\section{Visualisierung}");
+        latex.AppendLine(@"\begin{figure}[h]");
+        latex.AppendLine(@"\centering");
+        latex.AppendLine(@"\fbox{\parbox{0.8\textwidth}{\centering\vspace{3cm}Screenshot der 3D-Visualisierung (manuell einfügen)\vspace{3cm}}}");
+        latex.AppendLine(@"\caption{Platzhalter für den Screenshot der 3D-Ansicht.}");
+        latex.AppendLine(@"\end{figure}");
+        latex.AppendLine();
     }
 
     /// <summary>
     /// Dokumentiert die Core/Shell-Heterostruktur: Geometrie, Band-Offsets,
     /// Strain-Status und gebundene Zustände im endlichen Potentialtopf.
     /// </summary>
-    private static void AppendCoreShellSection(StringBuilder sb, CoreShellQuantumDot cs)
+    private static void AppendCoreShellSection(LatexBuilder latex, CoreShellQuantumDot cs)
     {
-        sb.AppendLine(@"\section{Core/Shell-Heterostruktur}");
-        sb.AppendLine($@"Core-Material: {Escape(cs.Material.Name)} ({cs.CoreRadius_nm:F2}\,nm), Shell-Material: {Escape(cs.ShellMaterial.Name)} ({cs.ShellThickness_nm:F2}\,nm).");
-        sb.AppendLine(@"\begin{table}[h]");
-        sb.AppendLine(@"\centering");
-        sb.AppendLine(@"\begin{tabular}{lr}");
-        sb.AppendLine(@"\toprule");
-        sb.AppendLine(@"\textbf{Größe} & \textbf{Wert} \\ ");
-        sb.AppendLine(@"\midrule");
-        sb.AppendLine($@"Elektronenbarriere $V_{{0,e}}$ & {cs.ElectronBarrier_eV:F3}\,eV \\ ");
-        sb.AppendLine($@"Lochbarriere $V_{{0,h}}$ & {cs.HoleBarrier_eV:F3}\,eV \\ ");
-        sb.AppendLine($@"Gitterfehlanpassung $f$ & {cs.LatticeMismatch_f * 100:F2}\,\% \\ ");
-        sb.AppendLine(cs.IsStrainRelaxed
+        latex.AppendLine(@"\section{Core/Shell-Heterostruktur}");
+        latex.AppendLine($@"Core-Material: {Escape(cs.Material.Name)} ({cs.CoreRadius_nm:F2}\,nm), Shell-Material: {Escape(cs.ShellMaterial.Name)} ({cs.ShellThickness_nm:F2}\,nm).");
+        latex.AppendLine(@"\begin{table}[h]");
+        latex.AppendLine(@"\centering");
+        latex.AppendLine(@"\begin{tabular}{lr}");
+        latex.AppendLine(@"\toprule");
+        latex.AppendLine(@"\textbf{Größe} & \textbf{Wert} \\ ");
+        latex.AppendLine(@"\midrule");
+        latex.AppendLine($@"Elektronenbarriere $V_{{0,e}}$ & {cs.ElectronBarrier_eV:F3}\,eV \\ ");
+        latex.AppendLine($@"Lochbarriere $V_{{0,h}}$ & {cs.HoleBarrier_eV:F3}\,eV \\ ");
+        latex.AppendLine($@"Gitterfehlanpassung $f$ & {cs.LatticeMismatch_f * 100:F2}\,\% \\ ");
+        latex.AppendLine(cs.IsStrainRelaxed
             ? $@"Kritische Schalendicke $t_c$ & {cs.CriticalThickness_nm:F2}\,nm \\\\ \emph{{Status}} & \textbf{{relaxiert (Versetzungen wahrscheinlich)}} \\ "
             : $@"Kritische Schalendicke $t_c$ & {cs.CriticalThickness_nm:F2}\,nm \\\\ \emph{{Status}} & kohärent (unter $t_c$) \\ ");
-        sb.AppendLine(@"\bottomrule");
-        sb.AppendLine(@"\end{tabular}");
-        sb.AppendLine(@"\caption{Band-Offsets und Strain-Charakteristik der Core/Shell-Struktur.}");
-        sb.AppendLine(@"\end{table}");
-        sb.AppendLine();
-        sb.AppendLine(@"Die gebundenen Zustände wurden im endlichen sphärischen Potentialtopf");
-        sb.AppendLine(@"(Anschlussbedingung $k \cot(kR) = -\kappa$, numerische Bisektion) berechnet.");
-        sb.AppendLine();
+        latex.AppendLine(@"\bottomrule");
+        latex.AppendLine(@"\end{tabular}");
+        latex.AppendLine(@"\caption{Band-Offsets und Strain-Charakteristik der Core/Shell-Struktur.}");
+        latex.AppendLine(@"\end{table}");
+        latex.AppendLine();
+        latex.AppendLine(@"Die gebundenen Zustände wurden im endlichen sphärischen Potentialtopf");
+        latex.AppendLine(@"(Anschlussbedingung $k \cot(kR) = -\kappa$, numerische Bisektion) berechnet.");
+        latex.AppendLine();
     }
 
-    private static void AppendScreenshot(StringBuilder sb, string screenshotPath)
+    private static void AppendScreenshot(LatexBuilder latex, string screenshotPath)
     {
         var fileName = Path.GetFileName(screenshotPath);
-        sb.AppendLine(@"\section{Visualisierung}");
-        sb.AppendLine(@"\begin{figure}[h]");
-        sb.AppendLine(@"\centering");
-        sb.AppendLine($@"\includegraphics[width=0.8\textwidth]{{{fileName}}}");
-        sb.AppendLine(@"\caption{Screenshot der 3D-Ansicht mit Atomgitter und Wahrscheinlichkeitswolke.}");
-        sb.AppendLine(@"\end{figure}");
-        sb.AppendLine();
+        latex.AppendLine(@"\section{Visualisierung}");
+        latex.AppendLine(@"\begin{figure}[h]");
+        latex.AppendLine(@"\centering");
+        latex.AppendLine($@"\includegraphics[width=0.8\textwidth]{{{fileName}}}");
+        latex.AppendLine(@"\caption{Screenshot der 3D-Ansicht mit Atomgitter und Wahrscheinlichkeitswolke.}");
+        latex.AppendLine(@"\end{figure}");
+        latex.AppendLine();
     }
 
     /// <summary>
@@ -442,10 +480,10 @@ public static class LatexReportGenerator
     /// <summary>
     /// Maskiert Sonderzeichen für LaTeX.
     /// </summary>
-    public static string Escape(string text)
+    public static string Escape(string? text)
     {
         if (string.IsNullOrEmpty(text))
-            return text;
+            return string.Empty;
 
         return text
             .Replace("\\", "\\textbackslash{}")

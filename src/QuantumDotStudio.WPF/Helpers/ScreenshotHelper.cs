@@ -27,10 +27,10 @@ public static class ScreenshotHelper
         try
         {
             var bitmap = new RenderTargetBitmap(
-                (int)(width * GetDpiScale()),
-                (int)(height * GetDpiScale()),
-                96 * GetDpiScale(),
-                96 * GetDpiScale(),
+                (int)(width * DpiScale),
+                (int)(height * DpiScale),
+                96 * DpiScale,
+                96 * DpiScale,
                 PixelFormats.Pbgra32);
 
             // Sicherstellen, dass das Element gemessen und angeordnet ist
@@ -54,10 +54,10 @@ public static class ScreenshotHelper
         }
     }
 
-    private static double GetDpiScale()
-    {
-        // Für konsistente Ausgabe auf verschiedenen Displays verwenden wir 1.0 als Basis-Skala
-        // und skalieren später über die Pixelabmessungen.
-        return 1.0;
-    }
+    /// <summary>
+    /// DPI-Skala der Bitmap-Erzeugung: 1.0 entspricht 96 dpi Basis. Für
+    /// konsistente Ausgabe auf verschiedenen Displays fixiert — die Skalierung
+    /// erfolgt über die Pixelabmessungen.
+    /// </summary>
+    private const double DpiScale = 1.0;
 }

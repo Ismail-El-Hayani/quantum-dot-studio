@@ -505,6 +505,16 @@ Produces a `.tex` document containing:
 
 The emission color is computed from wavelength with a simple visible-spectrum RGB approximation (`WavelengthToRgb`). All numbers are formatted with a fixed German culture (decimal comma), so the same calculation yields the same document on any machine. Generated reports are compile-verified with pdflatex.
 
+The document is written through a `LatexBuilder` (owns the string builder, plus paragraph/list helpers) and the generator exposes a robust API:
+
+- `TryGenerate(...)` never throws — it collects recoverable problems (missing
+  material, empty atom/level collections) in a `ReportResult` and still returns a
+  usable document.
+- `Generate(...)` delegates to `TryGenerate` and throws only when errors exist
+  (so existing callers keep their fail-fast behaviour).
+- The WPF export uses `TryGenerate`, so a defective report becomes a status
+  message instead of an unhandled exception in the command handler.
+
 ## 10. WPF binding
 
 The 3D view binds the `Content` of a `ModelVisual3D` directly to

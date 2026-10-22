@@ -151,12 +151,24 @@ public class ExportViewModel : INotifyPropertyChanged
             screenshotPath = ScreenshotProvider(targetPath);
         }
 
-        string latex = LatexReportGenerator.Generate(ActiveDot, screenshotPath, feasibility: FeasibilityResult);
-        File.WriteAllText(dialog.FileName, latex, System.Text.Encoding.UTF8);
+        // Graceful API: recoverbare Probleme werden gesammelt statt geworfen —
+        // ein defekter Report darf den Export nicht zum Absturz bringen.
+        var result = LatexReportGenerator.TryGenerate(ActiveDot, screenshotPath, feasibility: FeasibilityResult);
+        if (string.IsNullOrEmpty(result.Document))
+        {
+            StatusMessage = "Fehler: Bericht konnte nicht erzeugt werden — " + string.Join("; ", result.Errors);
+            return;
+        }
+
+        File.WriteAllText(dialog.FileName, result.Document, System.Text.Encoding.UTF8);
         LastExportPath = dialog.FileName;
-        StatusMessage = screenshotPath != null
+
+        string warnings = result.Errors.Count > 0
+            ? $" (Warnungen: {string.Join("; ", result.Errors)})"
+            : string.Empty;
+        StatusMessage = (screenshotPath != null
             ? $"Bericht mit Screenshot gespeichert unter: {dialog.FileName}"
-            : $"Bericht gespeichert unter: {dialog.FileName}";
+            : $"Bericht gespeichert unter: {dialog.FileName}") + warnings;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
