@@ -452,7 +452,11 @@ Unknown elements fall back to light gray.
 
 ### 8.1 Energy level plot
 
-Horizontal bar chart showing the first 12 electron/hole levels. Labels are grouped by base spectroscopic label (`1S`, `1P`, ...). Electrons are DodgerBlue, holes are Crimson.
+Physical band picture: valence band edge at 0 eV, conduction band edge at the
+core material's `E_g`, electron levels above it and hole levels below it
+(absolute energies, not confinement energies). Reference lines mark VBM, CBM and
+the vacuum level `E_vac = E_CB + χ` (FR-006 — a quantum dot has no Fermi
+level; the ionization energy is the physical reference).
 
 ### 8.2 Spectrum plot
 

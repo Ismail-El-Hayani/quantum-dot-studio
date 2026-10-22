@@ -13,7 +13,13 @@ namespace QuantumDotStudio.WPF.ViewModels;
 public static class PlotFactory
 {
     /// <summary>
-    /// Balkendiagramm der Elektronen- und Loch-Energieniveaus.
+    /// Energieniveaus-Diagramm im physikalischen Bandschema: Valenzbandkante
+    /// bei 0 eV, Leitungsbandkante bei E_g des Kern-Materials, die
+    /// Confinement-Niveaus darüber (Loch-Niveaus entsprechend darunter) und
+    /// als Referenz die Vakuum-Energie E_vac = E_CB + χ (FR-006). Ein
+    /// Fermi-Niveau gibt es bei einem Quanten-Dot nicht (keine
+    /// Metallzustände) — die Ionisierungsenergie ist die physikalisch
+    /// richtige Referenz.
     /// </summary>
     public static PlotModel CreateEnergyLevelPlot(QuantumDot dot)
     {
@@ -24,12 +30,15 @@ public static class PlotFactory
         };
 
         var categoryAxis = new CategoryAxis { Position = AxisPosition.Left, Title = "Zustand" };
-        var valueAxis = new LinearAxis { Position = AxisPosition.Bottom, Title = "Energie (eV)", Minimum = 0 };
+        var valueAxis = new LinearAxis { Position = AxisPosition.Bottom, Title = "Energie rel. zur Valenzbandkante (eV)" };
         model.Axes.Add(categoryAxis);
         model.Axes.Add(valueAxis);
 
         if (dot?.EnergyLevels == null || dot.EnergyLevels.Count == 0)
             return model;
+
+        double eg = dot.Material.BandGap_eV;                  // Leitungsbandkante des Kerns
+        double eVac = eg + dot.Material.ElectronAffinity_eV;  // Vakuum-Niveau
 
         var electronSeries = new BarSeries
         {
@@ -47,6 +56,8 @@ public static class PlotFactory
         };
 
         var labels = new List<string>();
+        double lowest = 0.0;
+        double highest = eg;
 
         foreach (var level in dot.EnergyLevels.Take(12))
         {
@@ -54,20 +65,59 @@ public static class PlotFactory
             string baseLabel = level.Label;
             if (!labels.Contains(baseLabel))
                 labels.Add(baseLabel);
-
             int categoryIndex = labels.IndexOf(baseLabel);
 
+            // Absolutenergie: Elektronen über der Leitungsbandkante, Löcher unter
+            // der Valenzbandkante. Die Coulomb-Bindung bleibt ein separater Term
+            // (im Report), das Diagramm zeigt das unkorrelaute Bandschema.
+            double energy = isElectron ? eg + level.Energy_eV : -level.Energy_eV;
+
             if (isElectron)
-                electronSeries.Items.Add(new BarItem(level.Energy_eV, categoryIndex));
+            {
+                electronSeries.Items.Add(new BarItem(energy, categoryIndex));
+                highest = Math.Max(highest, energy);
+            }
             else
-                holeSeries.Items.Add(new BarItem(level.Energy_eV, categoryIndex));
+            {
+                holeSeries.Items.Add(new BarItem(energy, categoryIndex));
+                lowest = Math.Min(lowest, energy);
+            }
         }
 
         categoryAxis.Labels.AddRange(labels);
         model.Series.Add(electronSeries);
         model.Series.Add(holeSeries);
-        model.Legends.Add(new Legend { LegendPosition = LegendPosition.TopRight });
 
+        // Referenzlinien: Valenzbandkante, Leitungsbandkante, Vakuum-Niveau.
+        model.Annotations.Add(new LineAnnotation
+        {
+            Type = LineAnnotationType.Vertical,
+            X = 0.0,
+            Color = OxyColors.Gray,
+            LineStyle = LineStyle.Dot,
+            Text = "VBM"
+        });
+        model.Annotations.Add(new LineAnnotation
+        {
+            Type = LineAnnotationType.Vertical,
+            X = eg,
+            Color = OxyColors.Gray,
+            LineStyle = LineStyle.Dot,
+            Text = "CBM"
+        });
+        model.Annotations.Add(new LineAnnotation
+        {
+            Type = LineAnnotationType.Vertical,
+            X = eVac,
+            Color = OxyColors.Purple,
+            LineStyle = LineStyle.Dash,
+            Text = $"Vakuum ({eVac:F2} eV)"
+        });
+
+        valueAxis.Minimum = lowest - 0.1;
+        valueAxis.Maximum = Math.Max(eVac, highest) + 0.1;
+
+        model.Legends.Add(new Legend { LegendPosition = LegendPosition.TopRight });
         return model;
     }
 

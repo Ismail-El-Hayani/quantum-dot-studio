@@ -19,7 +19,7 @@ Das System generiert ein sphärisches Ausschnitt aus einem kubisch-flächenzentr
 Das System berechnet die radiale Wahrscheinlichkeitsdichte |R_n,l(r)|² für den Grundzustand (n=1, l=0) und das erste angeregte Niveau (n=1, l=1) und stellt sie als transparente Isoflächen oder radiales Profil in der 3D-Ansicht dar.
 
 ### FR-006: Energieniveau-Diagramm
-Das System zeigt ein Balkendiagramm der berechneten Elektronen- und Loch-Niveaus mit der Fermi-Kante (Vakkum-Energie) als Referenz an.
+Das System zeigt ein Balkendiagramm der berechneten Elektronen- und Loch-Niveaus im physikalischen Bandschema (Valenzbandkante bei 0 eV, Leitungsbandkante bei E_g, Elektronen-Niveaus darüber, Loch-Niveaus darunter) mit der Vakuum-Energie E_vac = E_CB + χ als Referenz. Ein Fermi-Niveau existiert bei einem Quanten-Dot nicht (keine Metallzustände) — die Ionisierungsenergie ist die physikalisch richtige Referenz.
 
 ### FR-007: Emissionsspektrum
 Das System berechnet aus der effektiven Bandlücke die Emissionswellenlänge λ = hc / E_QD und stellt diese als farbigen Peak in einem Spektrum dar. Die Peakposition ändert sich dynamisch mit dem Radius (Quantum-Size-Effekt). Erweiterung (Optische Übergänge): Das Spektrum zeigt zusätzlich die Absorptionsserie der optischen Übergänge gleicher Quantenzahlen (Auswahlregel Δn = Δl = 0) mit relativen Oszillatorstärken nach m-Entartung (1S : 1P : 1D = 1 : 3 : 5); die Emissionslinie bleibt exakt an der Brus-Bandlücke verankert.
