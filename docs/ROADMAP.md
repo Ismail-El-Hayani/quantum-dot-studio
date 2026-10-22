@@ -265,8 +265,11 @@ core in water, relaxed thick shell) and the ±20 % Brus validation
 (Han 2001 CdSe series, Xiang & Tang CdTe 650 nm); `SensorSelectivity`
 implements factor 4b (Hg²⁺ interferes Pb²⁺, aptamer-FRET > metal quenching)
 and is wired into the engine's transduction factor. Template picker in the
-Machbarkeit tab. The optional response-time estimate remains open (documented
-as future work).
+Machbarkeit tab. The optional response-time estimate is delivered as an
+order-of-magnitude model: `SensorPhysics.ResponseTime_s` takes the slower of
+the diffusion limit (`t = L²/D`, 10 µm mixing length) and the binding limit
+(`t = 1/(k·[A])`, mode-dependent rate constants), names the limiting step and
+is shown in the sensor tab.
 
 ---
 

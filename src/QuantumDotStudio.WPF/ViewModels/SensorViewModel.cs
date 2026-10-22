@@ -133,6 +133,18 @@ public class SensorViewModel : INotifyPropertyChanged
             "PET" => BuildPetSummary(dot, analyte),
             _ => $"Unbekannter Modus: {analyte.Mode}"
         };
+
+        // Antwortzeit (Roadmap 4): limitiert entweder die Diffusion zur
+        // QD-Oberfläche oder die Bindung des Analyten.
+        double responseTime = SensorPhysics.ResponseTime_s(analyte.Mode, Concentration_M);
+        string timeText = double.IsInfinity(responseTime)
+            ? "unendlich (kein Analyt)"
+            : responseTime >= 60.0
+                ? $"{responseTime / 60.0:F1} min"
+                : responseTime >= 1.0
+                    ? $"{responseTime:F1} s"
+                    : $"{responseTime * 1000:F0} ms";
+        ResponseSummary += $"\nAntwortzeit: ~{timeText} (limitierend: {SensorPhysics.ResponseTimeLimit(analyte.Mode, Concentration_M)})";
         ResponsePlot = analyte.Mode switch
         {
             "FRET" => PlotFactory.CreateFretResponsePlot(analyte.ForsterRadius_nm, rUnbound, rBound),

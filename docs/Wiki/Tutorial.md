@@ -93,6 +93,7 @@ Der vierte Tab macht aus dem simulierten Quantum Dot einen **Sensor-Prototyp**:
    - *PET* (Dopamin, Ascorbat): Energetik-Kriterium — Elektronentransfer ist möglich, wenn das Redoxpotential des Analyten über der Leitungsbandkante des QD liegt (Quench-ON/OFF).
 3. Die **Konzentration** (M) bzw. Aktivität einstellen und bei FRET die Abstands-Extras der beiden Zustände.
 4. Rechts erscheinen Readout-Zusammenfassung (mit ✓/⚠-Verdikt) und der Antwortplot (E(r)-Kurve, Stern–Volmer-Kalibrierkurve, Nernst-Kurve bzw. PET-Energetik).
+5. Die Zusammenfassung nennt zusätzlich die **Antwortzeit** des Sensors (~Diffusions- oder Bindungslimit, aus `L²/D` bzw. `1/(k·[A])` — Details in `BackendAndCalculations` §9.1).
 
 Liganden und Analyten sind reine JSON-Dateien (`src/QuantumDotStudio.Core/Data/ligands.json` bzw. `analytes.json`) — neue Einträge erfordern keine Code-Änderung.
 

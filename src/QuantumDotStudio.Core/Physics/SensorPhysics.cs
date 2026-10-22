@@ -145,4 +145,88 @@ public static class SensorPhysics
         // weit positiv -> 0 (OFF).
         return 1.0 / (1.0 + Math.Exp(gap_eV / kT_eV));
     }
+
+    // ------------------------------------------------- Antwortzeit (Roadmap 4)
+
+    /// <summary>
+    /// Diffusionskoeffizient eines kleinen Moleküls in Wasser bei 25 °C
+    /// (CRC Handbook: D ≈ 5·10⁻¹⁰ m²/s).
+    /// </summary>
+    public const double DiffusionCoefficientWater_m2_per_s = 5.0e-10;
+
+    /// <summary>
+    /// Strecke, die der Analyt nach dem Anrühren zurücklegen muss
+    /// (Grenzschichtdicke nach dem Mischen, Größenordnung 10 µm).
+    /// </summary>
+    public const double DiffusionLength_m = 1.0e-5;
+
+    /// <summary>
+    /// Bimolekulare Assoziationsrate für die Bindung eines Analyten an
+    /// Rezeptor/Ligand (typisch 10⁴–10⁶ M⁻¹s⁻¹; hier 10⁵ M⁻¹s⁻¹).
+    /// </summary>
+    public const double AssociationRate_M_per_s = 1.0e5;
+
+    /// <summary>
+    /// Diffusionskontrollierte Begegnungsrate (Einstein-Smoluchowski, ~10¹⁰
+    /// M⁻¹s⁻¹ in Wasser) — gilt für Quenching, Protonenaustausch und
+    /// Elektronentransfer direkt am QD.
+    /// </summary>
+    public const double EncounterRate_M_per_s = 1.0e10;
+
+    /// <summary>
+    /// Diffusionszeit bis der Analyt die Oberfläche erreicht:
+    /// t = L²/D (mittlere Erstpassagezeit der 1D-Diffusion zur reaktiven
+    /// Fläche) — unabhängig von der Analytkonzentration.
+    /// </summary>
+    public static double DiffusionTime_s(double length_m = DiffusionLength_m, double diffusionCoefficient_m2_per_s = DiffusionCoefficientWater_m2_per_s)
+    {
+        if (length_m <= 0 || diffusionCoefficient_m2_per_s <= 0)
+            return 0.0;
+
+        return length_m * length_m / diffusionCoefficient_m2_per_s;
+    }
+
+    /// <summary>
+    /// Reaktionszeit der Transduktion: t = 1/(k·[A]). Der limitierende
+    /// Ratenkoeffizient hängt vom Modus ab — bei FRET ist es die Bindung des
+    /// Analyten (langsam), bei Quenching/Charge/PET die diffusionskontrollierte
+    /// Begegnung (praktisch sofort).
+    /// </summary>
+    public static double ReactionTime_s(string mode, double concentration_M)
+    {
+        if (concentration_M <= 0)
+            return double.PositiveInfinity;
+
+        double rate = mode switch
+        {
+            "FRET" => AssociationRate_M_per_s,
+            "Quenching" => EncounterRate_M_per_s,
+            "Charge" => EncounterRate_M_per_s,
+            "PET" => EncounterRate_M_per_s,
+            _ => AssociationRate_M_per_s
+        };
+
+        return 1.0 / (rate * concentration_M);
+    }
+
+    /// <summary>
+    /// Antwortzeit des Sensors: das langsamere der beiden seriellen Schritte
+    /// (Diffusion zur Oberfläche, dann Transduktion). Die Fluoreszenz-Auslese
+    /// (Integration über ~3 Lebensdauern, ~10–20 ns) ist dagegen vernachlässigbar.
+    /// </summary>
+    public static double ResponseTime_s(string mode, double concentration_M, double length_m = DiffusionLength_m)
+    {
+        return Math.Max(DiffusionTime_s(length_m), ReactionTime_s(mode, concentration_M));
+    }
+
+    /// <summary>
+    /// Welcher Schritt limitiert die Antwortzeit: "Reaktion/Bindung" oder
+    /// "Diffusion".
+    /// </summary>
+    public static string ResponseTimeLimit(string mode, double concentration_M, double length_m = DiffusionLength_m)
+    {
+        return ReactionTime_s(mode, concentration_M) >= DiffusionTime_s(length_m)
+            ? "Reaktion/Bindung"
+            : "Diffusion";
+    }
 }

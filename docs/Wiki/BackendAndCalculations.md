@@ -486,7 +486,40 @@ One response curve per transduction mode: FRET `E(r)` with bound/unbound
 markers, Stern–Volmer log calibration with LOD and current concentration,
 Nernst `ψ(pH)`, PET quench fraction vs. `E₀` with the CB edge.
 
-## 9. Report generation (`LatexReportGenerator`)
+## 9. Sensor physics (`SensorPhysics`)
+
+Pure transduction functions — no hidden state, fully unit-tested:
+
+| Mode | Quantity | Formula |
+|---|---|---|
+| FRET | Transfer efficiency | `E = 1 / (1 + (r/R₀)⁶)` (Förster 1948; Lakowicz ch. 13) |
+| FRET | Donor–acceptor distance | `r = R_QD + L_ligand + Δ_receptor` |
+| FRET | Ratiometric signal | `R = I_A/I_D = E/(1-E)` |
+| Quenching | Stern–Volmer | `I₀/I = 1 + K_SV [A]` (Lakowicz ch. 8) |
+| Charge | Surface potential | Nernst: 59.16 mV per decade at 25 °C, monovalent ions |
+| PET | Quench fraction | Fermi-like edge: `f = 1/(1+exp((E_CB−E₀)/kT))` |
+
+### 9.1 Response time
+
+The response is limited by the slower of two serial steps: the analyte must
+reach the QD surface, then the transduction itself reacts.
+
+- **Diffusion**: `t_diff = L²/D` with `D = 5·10⁻¹⁰ m²/s` (small molecule in
+  water, CRC Handbook) and `L = 10 µm` (boundary layer after mixing) → **0.2 s**,
+  independent of the analyte concentration.
+- **Transduction**: `t_rxn = 1/(k·[A])`. The rate constant depends on the mode:
+  FRET is binding-limited (`k = 10⁵ M⁻¹s⁻¹`, typical bimolecular association
+  rate), while quenching, charge and PET are diffusion-controlled encounters
+  (`k ≈ 10¹⁰ M⁻¹s⁻¹`, Einstein–Smoluchowski) and react immediately once the
+  analyte has arrived.
+- **Response time**: `t = max(t_diff, t_rxn)`. At `[A] = 0` there is no signal
+  at all, so the response time is infinite.
+
+The optical readout (integration over ~3 lifetimes, ~10–20 ns) is negligible.
+The sensor tab shows the estimate and names the limiting step; the constants
+live in `SensorPhysics` with their sources.
+
+## 10. Report generation (`LatexReportGenerator`)
 
 Produces a `.tex` document containing:
 1. Summary with material, radius, band gap, and wavelength.
@@ -515,7 +548,7 @@ The document is written through a `LatexBuilder` (owns the string builder, plus 
 - The WPF export uses `TryGenerate`, so a defective report becomes a status
   message instead of an unhandled exception in the command handler.
 
-## 10. WPF binding
+## 11. WPF binding
 
 The 3D view binds the `Content` of a `ModelVisual3D` directly to
 `Simulation.Pending3DModel` — a frozen `Model3DGroup` built entirely on a
@@ -526,7 +559,7 @@ value converter on the UI thread. The camera is fitted once to the bounds of a
 10 nm dot on load and stays fixed afterwards, so radius changes appear as
 visible scaling.
 
-## 11. Known simplifications and limitations
+## 12. Known simplifications and limitations
 
 - **Bare dots: infinite well** (finite well for core/shell); no surface states.
 - **Effective mass**: isotropic and material-independent inside the dot.
@@ -545,11 +578,15 @@ visible scaling.
   designs (not ab-initio); Monte Carlo priors are simple ± ranges.
 - **Solvent screening phenomenological**: `ε_eff = (2ε_dot + ε_sol)/3` — a
   blending ansatz, not a full image-charge treatment (§3.8).
+- **Response time is an order-of-magnitude estimate**: `t_diff = L²/D` and
+  `t_rxn = 1/(k·[A])` with generic constants (10 µm mixing length, 10⁵ M⁻¹s⁻¹
+  association rate) — a calibrated kinetic model would need measured rate
+  constants per ligand/analyte pair (§9.1).
 - **Varshni parameters partly generic**: CdSe/CdS/InP carry cited sources;
   PbS, ZnSe, CdTe and ZnS use generic II-VI estimates until verified
   sources are added to `materials.json`.
 
-## 12. Where to extend
+## 13. Where to extend
 
 | Feature | Files to touch |
 |---|---|
@@ -557,10 +594,9 @@ visible scaling.
 | Ternary alloys (e.g. AgInS₂) | `Material.cs`, `materials.json`, `LatticeEngine.cs`, `AtomPalette.cs` |
 | Exciton corrections beyond leading order | `QuantumSolver.cs`, `OpticalTransitions.cs` |
 | Verify Varshni constants per material (PbS, ZnSe, CdTe, ZnS — currently generic estimates) | `materials.json` + `EnvironmentModelTests` |
-| Response-time estimate (diffusion + kinetics) | `SensorPhysics.cs`, `SensorViewModel.cs` |
 | Real lineshape model | `PlotFactory.cs` |
 
-## 13. Continuous integration
+## 14. Continuous integration
 
 `.github/workflows/dotnet.yml` builds the solution and runs all xUnit tests on
 every push to `main` and on every pull request (windows-latest, .NET 10). Test
